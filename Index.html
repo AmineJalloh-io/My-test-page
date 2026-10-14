@@ -1,1313 +1,1189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-  <title>AfriPay · Interactive Guide</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AfriPay | Admin Dashboard</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='44' fill='%230a2b3c'/><text x='50' y='62' text-anchor='middle' font-family='Arial Black' font-size='40' font-weight='900' fill='%23FFD966'>AP</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+body {
+    background: linear-gradient(145deg, #eef2f7 0%, #d9e2ec 100%);
+    min-height: 100vh;
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    color: #1e3b4a;
+}
 
-    body {
-      background: linear-gradient(145deg, #eef2f7 0%, #d9e2ec 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem;
-    }
+/* ============================================================
+   DASHBOARD SHELL
+   ============================================================ */
+.wrap {
+    max-width: 1040px;
+    width: 100%;
+    background: #fff;
+    border-radius: 1.4rem;
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, .22);
+    overflow: hidden;
+}
+.head {
+    background: linear-gradient(135deg, #0a2b3c 0%, #1c4e6c 100%);
+    padding: 1rem 1.3rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.head h1 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #FFF, #FFD966, #6bc6ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -0.4px;
+}
+.head .sub { font-size: .72rem; opacity: .8; margin-top: 2px; }
+.head .logout {
+    background: rgba(255, 255, 255, .15);
+    border: none;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: .78rem;
+    transition: background .2s;
+}
+.head .logout:hover { background: rgba(255, 255, 255, .25); }
 
-    .guide-card {
-      max-width: 820px;
-      width: 100%;
-      background: #ffffff;
-      border-radius: 2rem;
-      box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.25);
-      overflow: hidden;
-      padding: 1.8rem 1.5rem 1.5rem;
-      transition: all 0.2s;
-    }
+/* ============================================================
+   TAB BAR
+   ============================================================ */
+.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: .7rem .8rem;
+    border-bottom: 2px solid #e0e8f0;
+    background: #f8fafc;
+}
+.tab {
+    flex: 1;
+    min-width: 110px;
+    background: #eef2f7;
+    border: none;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #1c6e8f;
+    font-size: .78rem;
+    position: relative;
+    transition: all .15s ease;
+}
+.tab:hover { background: #e0ebf5; }
+.tab.active { background: #0f2b3d; color: #fff; }
+.tab .badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #e74c3c;
+    color: #fff;
+    font-size: .6rem;
+    padding: 1px 7px;
+    border-radius: 20px;
+    font-weight: 800;
+    box-shadow: 0 2px 6px rgba(231, 76, 60, .35);
+}
 
-    .step-indicator {
-      display: flex;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-bottom: 1.2rem;
-      flex-wrap: wrap;
-    }
-    .step-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 20px;
-      background: #d0dce8;
-      transition: 0.25s;
-    }
-    .step-dot.active {
-      background: #0f2b3d;
-      width: 28px;
-    }
+/* ============================================================
+   PANES
+   ============================================================ */
+.body { padding: 1rem 1.2rem 1.4rem; }
+.pane { display: none; }
+.pane.active { display: block; }
+.section-title {
+    font-weight: 800;
+    color: #1c6e8f;
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    margin: .6rem 0 .4rem;
+    border-left: 3px solid #f4a261;
+    padding-left: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
 
-    .page-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: #0a2b3c;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      margin-bottom: 0.25rem;
-      min-height: 3rem;
-    }
-    .page-sub {
-      color: #2c7da0;
-      font-weight: 500;
-      margin-bottom: 0.8rem;
-      border-left: 3px solid #f4a261;
-      padding-left: 10px;
-      min-height: 2rem;
-    }
-    .content-box {
-      background: #f7fafc;
-      border-radius: 1.2rem;
-      padding: 1.2rem 1.2rem;
-      min-height: 160px;
-      border: 1px solid #e2edf7;
-      margin-bottom: 0.8rem;
-      line-height: 1.8;
-      color: #1e3b4a;
-      transition: background 0.2s;
-      position: relative;
-    }
-    .content-box.animating {
-      background: #fefcf5;
-      border-color: #f4a261;
-    }
-    .content-box strong {
-      color: #0f2b3d;
-    }
-    .content-box .typing-cursor {
-      display: inline-block;
-      width: 2px;
-      height: 1.1em;
-      background: #f4a261;
-      margin-left: 2px;
-      vertical-align: text-bottom;
-      animation: blink 0.8s step-end infinite;
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card {
+    background: #fff;
+    border: 1px solid #e2edf7;
+    border-radius: 12px;
+    padding: .7rem .9rem;
+    margin-bottom: .55rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .03);
+    transition: box-shadow .15s;
+}
+.card:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, .06); }
+.card .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+.card .title { font-weight: 800; color: #0f2b3d; font-size: .9rem; }
+.card .meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: .7rem;
+    color: #7f8c8d;
+    margin-bottom: 4px;
+}
+.card .meta span {
+    background: #f0f4f8;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+.card .mech {
+    font-size: .68rem;
+    color: #1c6e8f;
+    background: #eef7ff;
+    border: 1px dashed #a9cfe8;
+    border-radius: 8px;
+    padding: 5px 8px;
+    margin: 5px 0;
+    font-weight: 600;
+}
+.card .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.empty {
+    text-align: center;
+    color: #95a5a6;
+    font-style: italic;
+    padding: 1rem;
+    font-size: .8rem;
+    background: #fafbfc;
+    border-radius: 10px;
+    border: 1px dashed #e2edf7;
+}
 
-    .step-list {
-      padding-left: 1.4rem;
-      margin: 0.4rem 0;
-    }
-    .step-list li {
-      margin-bottom: 0.3rem;
-    }
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    font-size: .72rem;
+    height: 32px;
+    transition: opacity .15s, transform .1s;
+}
+.btn:hover { opacity: .88; }
+.btn:active { transform: scale(.97); }
+.btn.approve { background: #27ae60; color: #fff; }
+.btn.reject  { background: #e74c3c; color: #fff; }
+.btn.neutral { background: #2c7da0; color: #fff; }
+.btn.grey    { background: #eef2f7; color: #1e3b4a; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
 
-    /* Video overlay - Slideshow style */
-    .video-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.92);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      padding: 1rem;
-    }
-    .video-overlay.open {
-      display: flex;
-    }
-    .video-overlay .slide-container {
-      max-width: 800px;
-      width: 100%;
-      background: linear-gradient(145deg, #1a1a2e, #16213e);
-      border-radius: 24px;
-      padding: 2rem 2rem 1.5rem;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
-      position: relative;
-      min-height: 350px;
-      display: flex;
-      flex-direction: column;
-    }
-    .video-overlay .slide-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.8rem;
-      color: #88ccff;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 1px;
-    }
-    .video-overlay .slide-step-counter {
-      background: rgba(255,255,255,0.08);
-      padding: 0.2rem 1rem;
-      border-radius: 30px;
-      border: 1px solid rgba(136,204,255,0.2);
-    }
-    .video-overlay .slide-progress-bar {
-      width: 100%;
-      height: 3px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 4px;
-      margin-bottom: 0.8rem;
-      overflow: hidden;
-    }
-    .video-overlay .slide-progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #2c7da0, #f4a261);
-      border-radius: 4px;
-      transition: width 0.5s ease;
-      width: 0%;
-    }
-    .video-overlay .slide-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem 0.5rem;
-      min-height: 200px;
-    }
-    .video-overlay .slide-icon {
-      font-size: 3.5rem;
-      margin-bottom: 0.5rem;
-    }
-    .video-overlay .slide-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: #ffffff;
-      text-align: center;
-      margin-bottom: 0.6rem;
-      text-shadow: 0 2px 20px rgba(0,0,0,0.3);
-    }
-    .video-overlay .slide-desc {
-      font-size: 1.1rem;
-      color: #c8d6e5;
-      text-align: center;
-      max-width: 90%;
-      line-height: 1.6;
-      opacity: 0.9;
-    }
-    .video-overlay .slide-dots {
-      display: flex;
-      justify-content: center;
-      gap: 0.4rem;
-      margin-top: 0.8rem;
-    }
-    .video-overlay .slide-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.2);
-      transition: 0.3s;
-      cursor: pointer;
-    }
-    .video-overlay .slide-dot.active {
-      background: #f4a261;
-      width: 24px;
-      border-radius: 10px;
-    }
-    .video-overlay .slide-controls {
-      display: flex;
-      justify-content: center;
-      gap: 0.8rem;
-      margin-top: 0.8rem;
-      flex-wrap: wrap;
-    }
-    .video-overlay .slide-controls button {
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      color: white;
-      padding: 0.4rem 1.2rem;
-      border-radius: 30px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
-      font-size: 0.85rem;
-      height: 38px;
-    }
-    .video-overlay .slide-controls button:hover {
-      background: rgba(255,255,255,0.2);
-      transform: scale(1.03);
-    }
-    .video-overlay .slide-controls button.primary {
-      background: #f4a261;
-      border-color: #f4a261;
-    }
-    .video-overlay .slide-controls button.primary:hover {
-      background: #e08e4a;
-    }
-    .video-overlay .slide-controls button.close-btn {
-      background: #e74c3c;
-      border-color: #e74c3c;
-    }
-    .video-overlay .slide-controls button.close-btn:hover {
-      background: #c0392b;
-    }
-    .video-overlay .slide-voice-status {
-      color: #88ccff;
-      font-size: 0.7rem;
-      opacity: 0.7;
-      text-align: center;
-      margin-top: 0.3rem;
-    }
+/* ============================================================
+   AUTH GATE (Login + Register)
+   ============================================================ */
+.gate {
+    max-width: 420px;
+    margin: 2.4rem auto;
+    background: #fff;
+    border-radius: 1.4rem;
+    padding: 1.5rem 1.6rem 1.8rem;
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, .22);
+}
+.gate .brand { text-align: center; margin-bottom: 1rem; }
+.gate .brand .logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0f2b3d, #1c4e6c);
+    color: #FFD966;
+    font-family: 'Arial Black', sans-serif;
+    font-weight: 900;
+    font-size: 1.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto .5rem;
+    box-shadow: 0 6px 18px rgba(15, 43, 61, .3);
+    letter-spacing: -1px;
+}
+.gate .brand h2 { color: #0f2b3d; font-size: 1.15rem; font-weight: 800; }
+.gate .brand p { color: #7f8c8d; font-size: .74rem; margin-top: 2px; }
 
-    .action-btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin: 0.6rem 0;
-    }
-    .action-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #0f2b3d;
-      color: white;
-      padding: 0.4rem 1rem;
-      border-radius: 40px;
-      font-weight: 600;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      font-size: 0.85rem;
-      transition: 0.2s;
-      height: 40px;
-    }
-    .action-btn:hover {
-      transform: scale(1.03);
-      opacity: 0.9;
-    }
-    .action-btn.whatsapp { background: #25D366; }
-    .action-btn.whatsapp:hover { background: #1da851; }
-    .action-btn.nusapp { background: #6c3b9e; }
-    .action-btn.nusapp:hover { background: #522b7a; }
-    .action-btn.xender { background: #FF6B00; }
-    .action-btn.xender:hover { background: #cc5500; }
-    .action-btn.bluetooth { background: #0088cc; }
-    .action-btn.bluetooth:hover { background: #006699; }
-    .action-btn.cloud { background: #2980b9; }
-    .action-btn.cloud:hover { background: #1f6d99; }
-    .action-btn.usb { background: #e67e22; }
-    .action-btn.usb:hover { background: #cc6a1a; }
+.gate-tabs {
+    display: flex;
+    gap: 4px;
+    background: #eef2f7;
+    border-radius: 30px;
+    padding: 4px;
+    margin-bottom: 1rem;
+}
+.gate-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 8px 10px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: .8rem;
+    cursor: pointer;
+    color: #1c6e8f;
+    transition: all .15s;
+}
+.gate-tab:hover { color: #0f2b3d; }
+.gate-tab.active {
+    background: #0f2b3d;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(15, 43, 61, .25);
+}
 
-    .audio-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.5rem;
-      margin: 0.4rem 0 0.2rem;
-      background: #f0f6fb;
-      padding: 0.5rem 0.8rem;
-      border-radius: 60px;
-      border: 1px solid #dce8f0;
-    }
-    .audio-row select {
-      background: white;
-      border: 1px solid #d0dce8;
-      border-radius: 30px;
-      padding: 0.2rem 0.8rem;
-      font-weight: 600;
-      height: 36px;
-      outline: none;
-      font-size: 0.85rem;
-    }
-    .audio-btn, .video-btn {
-      background: #0f2b3d;
-      border: none;
-      color: white;
-      padding: 0.3rem 1.2rem;
-      border-radius: 40px;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: 0.2s;
-      height: 40px;
-      font-size: 0.95rem;
-    }
-    .video-btn {
-      background: #8e44ad;
-    }
-    .video-btn:hover {
-      background: #732d91;
-      transform: scale(1.01);
-    }
-    .audio-btn:hover {
-      background: #f4a261;
-      transform: scale(1.01);
-    }
-    .audio-btn:disabled, .video-btn:disabled {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-    .audio-status {
-      font-size: 0.75rem;
-      color: #2c7da0;
-      margin-left: 6px;
-      font-weight: 500;
-    }
-    .btn-row {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
+.gate-pane { display: none; }
+.gate-pane.active { display: block; }
 
-    .nav-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.6rem;
-      flex-wrap: wrap;
-      margin-top: 0.5rem;
-    }
-    .nav-btn {
-      background: #eef2f7;
-      border: none;
-      padding: 0.5rem 1.2rem;
-      border-radius: 40px;
-      font-weight: 700;
-      color: #1c6e8f;
-      cursor: pointer;
-      transition: 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      height: 46px;
-      font-size: 1rem;
-    }
-    .nav-btn.primary {
-      background: #0f2b3d;
-      color: white;
-    }
-    .nav-btn.primary:hover {
-      background: #f4a261;
-    }
-    .nav-btn:disabled {
-      opacity: 0.3;
-      pointer-events: none;
-    }
-    .page-counter {
-      font-weight: 600;
-      color: #2c7da0;
-    }
+.field { margin-bottom: .65rem; text-align: left; }
+.field label {
+    display: block;
+    font-weight: 700;
+    color: #1e3b4a;
+    font-size: .72rem;
+    margin-bottom: 3px;
+}
+.field input {
+    width: 100%;
+    padding: 9px 14px;
+    border-radius: 30px;
+    border: 1.5px solid #d0dce8;
+    font-size: .88rem;
+    outline: none;
+    background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+}
+.field input:focus {
+    border-color: #2c7da0;
+    box-shadow: 0 0 0 3px rgba(44, 125, 160, .15);
+}
+.field .hint { font-size: .62rem; color: #95a5a6; margin-top: 3px; }
 
-    @media (max-width: 480px) {
-      .guide-card { padding: 1.2rem 1rem; }
-      .page-title { font-size: 1.4rem; }
-      .audio-row { flex-direction: column; align-items: stretch; }
-      .btn-row { flex-direction: column; }
-      .btn-row .audio-btn, .btn-row .video-btn { width: 100%; justify-content: center; }
-      .nav-row { flex-direction: column; }
-      .nav-btn { width: 100%; justify-content: center; }
-      .content-box { padding: 0.8rem; min-height: 120px; }
-      .action-btn-group { flex-direction: column; }
-      .action-btn { width: 100%; justify-content: center; }
-      .video-overlay .slide-container { padding: 1.2rem; min-height: 280px; }
-      .video-overlay .slide-title { font-size: 1.3rem; }
-      .video-overlay .slide-desc { font-size: 0.9rem; }
-      .video-overlay .slide-icon { font-size: 2.8rem; }
-    }
-  </style>
+.gate button.primary {
+    width: 100%;
+    padding: 10px;
+    border-radius: 30px;
+    border: none;
+    background: #0f2b3d;
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
+    font-size: .88rem;
+    margin-top: 4px;
+    transition: background .15s;
+}
+.gate button.primary:hover:not(:disabled) { background: #1c4e6c; }
+.gate button.primary:disabled { opacity: .55; cursor: not-allowed; }
+
+.gate .swap {
+    text-align: center;
+    margin-top: 12px;
+    font-size: .74rem;
+    color: #7f8c8d;
+}
+.gate .swap a {
+    color: #2c7da0;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+}
+.gate .swap a:hover { text-decoration: underline; }
+
+.error {
+    color: #c0392b;
+    font-size: .72rem;
+    background: #fdecea;
+    border: 1px solid #f5c6c0;
+    padding: 6px 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    display: none;
+}
+.error.show { display: block; }
+.success {
+    color: #1e7e34;
+    font-size: .72rem;
+    background: #e8f8ef;
+    border: 1px solid #b8e0c8;
+    padding: 6px 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    display: none;
+}
+.success.show { display: block; }
+
+/* ============================================================
+   STAT ROW
+   ============================================================ */
+.stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: .5rem;
+    margin-bottom: .8rem;
+    padding: 1rem 1.2rem 0;
+}
+.stat {
+    background: linear-gradient(135deg, #0f2b3d, #1c4e6c);
+    color: #fff;
+    border-radius: 10px;
+    padding: .6rem .7rem;
+    text-align: center;
+}
+.stat .v {
+    font-size: 1.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #FFD966, #6bc6ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1.1;
+}
+.stat .l {
+    font-size: .62rem;
+    opacity: .85;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: .5px;
+    margin-top: 2px;
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+.hidden { display: none !important; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 600px) {
+    body { padding: .6rem; }
+    .head { padding: .8rem 1rem; }
+    .head h1 { font-size: 1.1rem; }
+    .body { padding: .8rem; }
+    .tab { font-size: .68rem; padding: 6px 6px; min-width: 85px; }
+    .gate { margin: 1rem auto; padding: 1.2rem; }
+    .stat-row { padding: .8rem .8rem 0; }
+    .stat .v { font-size: 1.2rem; }
+}
+</style>
 </head>
 <body>
-<div class="guide-card" id="guideApp">
-  <div class="step-indicator" id="stepDots"></div>
 
-  <div id="pageContainer">
-    <div class="page-title" id="pageTitle">🌍 AfriPay</div>
-    <div class="page-sub" id="pageSub">Cross‑border mobile money hub</div>
-    <div class="content-box" id="pageContent">
-      <p><strong>AfriPay</strong> connects West Africa through instant Orange Money, Afrimoney, QMoney and WBMoney transfers.</p>
-      <p style="margin-top:0.4rem;">🌐 <span class="highlight">Developer:</span> <strong>Mohamed Amine Jalloh</strong> · NUSWEB</p>
+<!-- ============================================================
+     AUTH GATE — LOGIN / REGISTER
+     ============================================================ -->
+<div id="gateScreen" class="gate">
+    <div class="brand">
+        <div class="logo">AP</div>
+        <h2>AfriPay Admin</h2>
+        <p>Sign in or create an admin account</p>
     </div>
 
-    <div class="audio-row">
-      <select id="audioLangSelect">
-        <option value="en">🇬🇧 English</option>
-        <option value="ar">🇸🇦 العربية</option>
-        <option value="fr">🇫🇷 Français</option>
-        <option value="es">🇪🇸 Español</option>
-      </select>
-      <div class="btn-row">
-        <button class="audio-btn" id="playAudioBtn">🔊 Play Audio</button>
-        <button class="video-btn" id="playVideoBtn">🎬 Slideshow</button>
-      </div>
-      <span class="audio-status" id="audioStatus">Ready</span>
+    <div class="gate-tabs">
+        <button type="button" class="gate-tab active" id="tabLogin">🔐 Login</button>
+        <button type="button" class="gate-tab" id="tabRegister">📝 Register</button>
     </div>
-  </div>
 
-  <div class="nav-row">
-    <button class="nav-btn" id="prevBtn" disabled>◀ Back</button>
-    <span class="page-counter" id="pageCounter">1 / 9</span>
-    <button class="nav-btn primary" id="nextBtn">Next ▶</button>
-  </div>
+    <!-- ===== LOGIN PANE ===== -->
+    <div class="gate-pane active" id="paneLogin">
+        <div id="loginError" class="error"></div>
+        <div id="loginSuccess" class="success"></div>
+
+        <div class="field">
+            <label>Email *</label>
+            <input type="email" id="loginEmail" placeholder="admin@afripay.com" autocomplete="username" />
+        </div>
+        <div class="field">
+            <label>Password *</label>
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+            <div class="hint">Emergency bootstrap password works too.</div>
+        </div>
+
+        <button class="primary" id="loginBtn">Unlock Dashboard</button>
+
+        <div class="swap">Don't have an account? <a id="swapToRegister">Register →</a></div>
+    </div>
+
+    <!-- ===== REGISTER PANE ===== -->
+    <div class="gate-pane" id="paneRegister">
+        <div id="regError" class="error"></div>
+        <div id="regSuccess" class="success"></div>
+
+        <div class="field">
+            <label>Full Name *</label>
+            <input type="text" id="regFullName" placeholder="e.g. Amine Jalloh" autocomplete="name" />
+        </div>
+        <div class="field">
+            <label>Email *</label>
+            <input type="email" id="regEmail" placeholder="admin@afripay.com" autocomplete="email" />
+        </div>
+        <div class="field">
+            <label>Password *</label>
+            <input type="password" id="regPassword" placeholder="At least 6 characters" autocomplete="new-password" />
+        </div>
+        <div class="field">
+            <label>Confirm Password *</label>
+            <input type="password" id="regConfirm" placeholder="Repeat password" autocomplete="new-password" />
+        </div>
+        <div class="field">
+            <label>Admin Invite Code *</label>
+            <input type="password" id="regInvite" placeholder="Ask the platform owner" />
+            <div class="hint">Without the correct code, registration is blocked.</div>
+        </div>
+
+        <button class="primary" id="registerBtn">Create Admin Account</button>
+
+        <div class="swap">Already registered? <a id="swapToLogin">Login →</a></div>
+    </div>
 </div>
 
-<!-- Video Overlay - Slideshow -->
-<div class="video-overlay" id="videoOverlay">
-  <div class="slide-container">
-    <div class="slide-header">
-      <span class="slide-step-counter" id="slideStepCounter">Step 1 of 6</span>
-      <span style="color:rgba(255,255,255,0.4); font-size:0.7rem;" id="slideLangDisplay">🇬🇧 English</span>
+<!-- ============================================================
+     DASHBOARD
+     ============================================================ -->
+<div id="dashScreen" class="wrap hidden">
+    <!-- Header -->
+    <div class="head">
+        <div>
+            <h1>🛡️ AfriPay Admin</h1>
+            <div class="sub">Approve agent-submitted items — approved items go live instantly</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span id="whoAmI" style="font-size:.72rem;opacity:.85;"></span>
+            <button class="logout" id="logoutBtn">Logout</button>
+        </div>
     </div>
-    <div class="slide-progress-bar">
-      <div class="slide-progress-fill" id="slideProgressFill"></div>
+
+    <!-- Stats -->
+    <div class="stat-row">
+        <div class="stat"><div class="v" id="statPendingBiz">0</div><div class="l">Pending Biz</div></div>
+        <div class="stat"><div class="v" id="statPendingAgent">0</div><div class="l">Pending Agents</div></div>
+        <div class="stat"><div class="v" id="statPendingClient">0</div><div class="l">Pending Clients</div></div>
+        <div class="stat"><div class="v" id="statLiveBiz">0</div><div class="l">Live Businesses</div></div>
+        <div class="stat"><div class="v" id="statLiveAgent">0</div><div class="l">Live Agents</div></div>
     </div>
-    <div class="slide-content" id="slideContent">
-      <div class="slide-icon" id="slideIcon">📱</div>
-      <div class="slide-title" id="slideTitle">Welcome to AfriPay</div>
-      <div class="slide-desc" id="slideDesc">Loading slideshow...</div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab active" data-tab="pbiz">🏪 Pending Biz <span class="badge" id="badgePbiz" style="display:none">0</span></button>
+        <button class="tab" data-tab="pagent">🧑‍💼 Pending Agents <span class="badge" id="badgePagent" style="display:none">0</span></button>
+        <button class="tab" data-tab="pclient">👥 Pending Clients <span class="badge" id="badgePclient" style="display:none">0</span></button>
+        <button class="tab" data-tab="lbiz">✅ Live Businesses</button>
+        <button class="tab" data-tab="lagent">✅ Live Agents</button>
+        <button class="tab" data-tab="lclient">✅ Live Clients</button>
+        <button class="tab" data-tab="reviewed">🗂️ Reviewed</button>
     </div>
-    <div class="slide-dots" id="slideDots"></div>
-    <div class="slide-controls">
-      <button id="slidePrevBtn">◀ Prev</button>
-      <button class="primary" id="slidePlayBtn">⏸ Pause</button>
-      <button id="slideNextBtn">Next ▶</button>
-      <button class="close-btn" id="slideCloseBtn">✕ Close</button>
+
+    <!-- Panes -->
+    <div class="body">
+        <div class="pane active" id="pane-pbiz">
+            <div class="section-title">Pending Businesses</div>
+            <div id="listPbiz"></div>
+        </div>
+        <div class="pane" id="pane-pagent">
+            <div class="section-title">Pending Agents</div>
+            <div id="listPagent"></div>
+        </div>
+        <div class="pane" id="pane-pclient">
+            <div class="section-title">Pending Clients</div>
+            <div id="listPclient"></div>
+        </div>
+        <div class="pane" id="pane-lbiz">
+            <div class="section-title">Live Businesses</div>
+            <div id="listLbiz"></div>
+        </div>
+        <div class="pane" id="pane-lagent">
+            <div class="section-title">Live Agents</div>
+            <div id="listLagent"></div>
+        </div>
+        <div class="pane" id="pane-lclient">
+            <div class="section-title">Live Clients</div>
+            <div id="listLclient"></div>
+        </div>
+        <div class="pane" id="pane-reviewed">
+            <div class="section-title">Reviewed (last 50)</div>
+            <div id="listReviewed"></div>
+        </div>
     </div>
-    <div class="slide-voice-status" id="slideVoiceStatus">🔊 Voice narration ready</div>
-  </div>
 </div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1e2f3c;color:#fff;padding:8px 20px;border-radius:40px;font-size:.85rem;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center;max-width:85%;"></div>
 
 <script>
-  (function() {
-    // ---------- PAGE DATA (9 pages) with slideshow steps ----------
-    const translations = {
-      en: {
-        pages: [
-          {
-            title: 'AfriPay',
-            sub: 'Cross-border mobile money hub',
-            content: `<p><strong>AfriPay</strong> is a payment hub for West Africa. It enables instant transfers via <strong>Orange Money, Afrimoney, QMoney and WBMoney</strong>.</p>
-                     <p style="margin-top:0.6rem;">Developer: <strong>Mohamed Amine Jalloh</strong> · NUSWEB Financial Technologies</p>
-                     <p style="margin-top:0.4rem;">Built for Sierra Leone, Guinea, Senegal, Ghana, Liberia, and more.</p>`,
-            steps: [
-              { icon: '🌍', title: 'Welcome to AfriPay', desc: 'AfriPay is a payment hub for West Africa.' },
-              { icon: '📱', title: 'Mobile Money Transfers', desc: 'Enables instant transfers via Orange Money, Afrimoney, QMoney and WBMoney.' },
-              { icon: '👨‍💻', title: 'Developer', desc: 'Built by Mohamed Amine Jalloh · NUSWEB Financial Technologies.' },
-              { icon: '🌍', title: 'Supported Countries', desc: 'Sierra Leone, Guinea, Senegal, Ghana, Liberia and more.' }
-            ]
-          },
-          {
-            title: 'Agent and Collateral',
-            sub: 'Secure agent registration with collateral',
-            content: `<p><strong>Agent registration</strong> requires a business name, ID, and a collateral limit up to 10,000.</p>
-                     <p style="margin-top:0.4rem;">Collateral protects clients. If an agent fails to deliver, the developer compensates the client from the collateral.</p>
-                     <p style="margin-top:0.4rem;">Agents sign a digital agreement and receive <strong>7 percent commission</strong> on transfers and <strong>12 percent</strong> on cash outs.</p>`,
-            steps: [
-              { icon: '🏢', title: 'Agent Registration', desc: 'Requires business name, ID, and collateral limit up to 10,000.' },
-              { icon: '🛡️', title: 'Collateral Protection', desc: 'Collateral protects clients if agent fails to deliver.' },
-              { icon: '📜', title: 'Digital Agreement', desc: 'Agents sign a digital agreement.' },
-              { icon: '💰', title: 'Commission', desc: '7% commission on transfers, 12% on cash outs.' }
-            ]
-          },
-          {
-            title: 'Live Rates and Receipts',
-            sub: 'Real-time currency converter and digital receipts',
-            content: `<p><strong>Currency converter</strong> uses live exchange rates with USD as base. Calculate fees including a 4 percent transfer charge and GST.</p>
-                     <p style="margin-top:0.4rem;">Every transaction generates a receipt with TX ID, provider TX ID, and transfer code. Share via WhatsApp or SMS.</p>
-                     <p style="margin-top:0.4rem;">Supports over 20 countries with dynamic USSD codes for Orange, Afrimoney, and WBMoney.</p>`,
-            steps: [
-              { icon: '💱', title: 'Live Currency Converter', desc: 'Uses live exchange rates with USD as base.' },
-              { icon: '📊', title: 'Fees Calculator', desc: '4% transfer charge plus GST.' },
-              { icon: '🧾', title: 'Digital Receipts', desc: 'Receipt includes TX ID, provider TX ID, and transfer code.' },
-              { icon: '🌍', title: 'Multi-country Support', desc: 'Supports 20+ countries with dynamic USSD codes.' }
-            ]
-          },
-          {
-            title: 'Get AfriPay',
-            sub: 'Download and install the application',
-            content: `<p><strong>How to get AfriPay:</strong></p>
-                     <div class="action-btn-group">
-                       <button class="action-btn nusapp" id="nusappBtn">📦 NUSAPPSTORE</button>
-                       <button class="action-btn whatsapp" id="whatsappBtn">💬 WhatsApp</button>
-                       <button class="action-btn xender" id="xenderBtn">📤 Xender</button>
-                       <button class="action-btn bluetooth" id="bluetoothBtn">📡 Bluetooth</button>
-                       <button class="action-btn usb" id="usbBtn">📁 USB / OTG</button>
-                       <button class="action-btn cloud" id="cloudBtn">☁️ Cloud</button>
-                     </div>
-                     <ul class="step-list">
-                       <li><strong>NUSAPPSTORE</strong> – download the NUSAPPSTORE app, then install AfriPay from it.</li>
-                       <li><strong>WhatsApp</strong> – message <strong>+23276436811</strong> to request the APK.</li>
-                       <li><strong>Xender</strong> – use Xender if installed for direct transfer.</li>
-                       <li><strong>Bluetooth</strong> – use Bluetooth to share the file.</li>
-                       <li><strong>USB or OTG</strong> – copy from a USB drive or use OTG cable.</li>
-                       <li><strong>Cloud</strong> – share via Google Drive, Dropbox, or Telegram.</li>
-                     </ul>`,
-            steps: [
-              { icon: '📦', title: 'NUSAPPSTORE', desc: 'Download NUSAPPSTORE app, then install AfriPay from it.' },
-              { icon: '💬', title: 'WhatsApp', desc: 'Message +23276436811 on WhatsApp to request the APK.' },
-              { icon: '📤', title: 'Xender', desc: 'Use Xender for direct transfer if installed.' },
-              { icon: '📡', title: 'Bluetooth', desc: 'Use Bluetooth to share the file with others.' },
-              { icon: '📁', title: 'USB / OTG', desc: 'Copy from a USB drive or use OTG cable.' },
-              { icon: '☁️', title: 'Cloud', desc: 'Share via Google Drive, Dropbox, or Telegram.' }
-            ]
-          },
-          {
-            title: 'Create User Account',
-            sub: 'Step-by-step registration',
-            content: `<p><strong>Steps to create a user or client account:</strong></p>
-                     <ol class="step-list">
-                       <li>Open the AfriPay app and tap <strong>Register</strong> on the login screen.</li>
-                       <li>Enter your <strong>Full Name</strong> and <strong>Phone Number</strong> with country code.</li>
-                       <li>Fill in your <strong>Address</strong> and select your <strong>City or Town</strong>.</li>
-                       <li>Choose your <strong>Country</strong> from the dropdown.</li>
-                       <li>Pick a <strong>Profile Icon</strong> or upload your own image.</li>
-                       <li>Tap <strong>Register</strong> – your account is created instantly.</li>
-                       <li>You can now <strong>Login</strong> with your name and phone number.</li>
-                     </ol>`,
-            steps: [
-              { icon: '📱', title: 'Open AfriPay', desc: 'Open the app and tap Register on the login screen.' },
-              { icon: '✏️', title: 'Enter Details', desc: 'Enter Full Name and Phone Number with country code.' },
-              { icon: '📍', title: 'Address & City', desc: 'Fill in your Address and select your City or Town.' },
-              { icon: '🌍', title: 'Select Country', desc: 'Choose your Country from the dropdown.' },
-              { icon: '🖼️', title: 'Profile Icon', desc: 'Pick a Profile Icon or upload your own image.' },
-              { icon: '✅', title: 'Register', desc: 'Tap Register – your account is created instantly.' },
-              { icon: '🔑', title: 'Login', desc: 'Login with your name and phone number.' }
-            ]
-          },
-          {
-            title: 'Create Agent Account',
-            sub: 'Step-by-step agent registration (summary)',
-            content: `<p><strong>Quick steps to create an agent account:</strong></p>
-                     <ol class="step-list">
-                       <li>Tap <strong>Register</strong> then select <strong>Register as Agent</strong>.</li>
-                       <li>Fill in <strong>Business Name, Address, City, and Registration Number</strong>.</li>
-                       <li>Select <strong>Business Type</strong> and enter <strong>Owner Name</strong>.</li>
-                       <li>Provide <strong>ID Type and ID Number</strong> and upload ID photo.</li>
-                       <li>Enter your <strong>Mobile Money Number</strong>.</li>
-                       <li>Set <strong>Collateral Limit</strong>, generate password and PIN.</li>
-                       <li>Tap <strong>Generate USSD</strong> for collateral payment code.</li>
-                       <li>Read and <strong>sign the Agent Agreement</strong>.</li>
-                       <li>Tap <strong>Register Agent</strong> – account submitted for approval.</li>
-                     </ol>
-                     <p style="margin-top:0.4rem;">For a detailed step-by-step guide with agreement signing, see the next page.</p>`,
-            steps: [
-              { icon: '🏢', title: 'Start Registration', desc: 'Tap Register then select Register as Agent.' },
-              { icon: '📝', title: 'Business Details', desc: 'Fill in Business Name, Address, City, Registration Number.' },
-              { icon: '👤', title: 'Owner & Type', desc: 'Select Business Type and enter Owner Name.' },
-              { icon: '🪪', title: 'ID Upload', desc: 'Provide ID Type, ID Number and upload ID photo.' },
-              { icon: '📱', title: 'Mobile Money', desc: 'Enter your Mobile Money Number.' },
-              { icon: '🔐', title: 'Security', desc: 'Set Collateral Limit, generate password and PIN.' },
-              { icon: '📞', title: 'Generate USSD', desc: 'Tap Generate USSD for collateral payment code.' },
-              { icon: '✍️', title: 'Sign Agreement', desc: 'Read and sign the Agent Agreement.' },
-              { icon: '✅', title: 'Submit', desc: 'Tap Register Agent – account submitted for approval.' }
-            ]
-          },
-          {
-            title: 'Agent Registration in Detail',
-            sub: 'Full guide including agreement signing',
-            content: `<p><strong>Detailed steps to create an agent account:</strong></p>
-                     <ol class="step-list">
-                       <li>Open the AfriPay app and tap <strong>Register</strong> on the login screen.</li>
-                       <li>Select <strong>Register as Agent</strong> from the options.</li>
-                       <li>Fill in your <strong>Business Name</strong>, <strong>Business Address</strong>, <strong>City/Town</strong>, and <strong>Official Registration Number</strong>.</li>
-                       <li>Choose your <strong>Business Type</strong> (e.g., Retail, Service, etc.) and enter the <strong>Owner's Full Name</strong>.</li>
-                       <li>Select your <strong>ID Type</strong> (National ID, Passport, etc.) and enter your <strong>ID Number</strong>. Upload a clear photo of your ID.</li>
-                       <li>Enter your <strong>Mobile Money Number</strong> (the phone number linked to your Orange Money or Afrimoney account).</li>
-                       <li>Set a <strong>Collateral Limit</strong> (the maximum amount you can transact). Generate a <strong>6-character password</strong> and a <strong>5-digit PIN</strong> for security.</li>
-                       <li>Tap <strong>Generate USSD</strong> to create a collateral payment code – this links your collateral to your agent account.</li>
-                       <li><strong>Read the Agent Agreement</strong> carefully. It outlines your obligations, commission rates (7% on transfers, 12% on cash-outs), and the collateral policy.</li>
-                       <li><strong>Sign the agreement</strong> by drawing your signature on the canvas provided in the app.</li>
-                       <li>Once signed, tap <strong>Register Agent</strong> to submit your application for approval.</li>
-                       <li>You will receive a confirmation and your agent account will be activated after admin review.</li>
-                     </ol>
-                     <p style="margin-top:0.4rem;">Agents earn <strong>7% commission</strong> on transfers and <strong>12%</strong> on cash-outs.</p>`,
-            steps: [
-              { icon: '📱', title: 'Open App & Register', desc: 'Open AfriPay, tap Register, select Register as Agent.' },
-              { icon: '📝', title: 'Business Details', desc: 'Fill in Business Name, Address, City, Registration Number.' },
-              { icon: '👤', title: 'Owner & Type', desc: 'Choose Business Type and enter Owner Full Name.' },
-              { icon: '🪪', title: 'ID Upload', desc: 'Select ID Type, enter ID Number, and upload ID photo.' },
-              { icon: '📱', title: 'Mobile Money', desc: 'Enter your Mobile Money Number.' },
-              { icon: '🔐', title: 'Security Settings', desc: 'Set Collateral Limit, generate 6-char password and 5-digit PIN.' },
-              { icon: '📞', title: 'Generate USSD', desc: 'Tap Generate USSD for collateral payment code.' },
-              { icon: '📜', title: 'Read Agreement', desc: 'Carefully read the Agent Agreement terms.' },
-              { icon: '✍️', title: 'Sign Agreement', desc: 'Draw your signature on the canvas to sign.' },
-              { icon: '✅', title: 'Submit', desc: 'Tap Register Agent to submit for approval.' }
-            ]
-          },
-          {
-            title: 'Send Money Locally',
-            sub: 'Step-by-step local transfer guide',
-            content: `<p><strong>How to send money locally:</strong></p>
-                     <ol class="step-list">
-                       <li><strong>Login</strong> to your AfriPay account.</li>
-                       <li><strong>Sender details</strong> are pre-filled automatically from your registration.</li>
-                       <li>Select a <strong>registered agent</strong> from the dropdown.</li>
-                       <li>Enter the <strong>amount</strong> – 4% charge applied.</li>
-                       <li>Select <strong>Mobile Money operator</strong>.</li>
-                       <li>Tap operator button to generate <strong>USSD code</strong>.</li>
-                       <li>Enter your <strong>4-digit PIN</strong> to complete.</li>
-                       <li>Receive a <strong>digital receipt</strong>.</li>
-                     </ol>`,
-            steps: [
-              { icon: '🔑', title: 'Login', desc: 'Login to your AfriPay account.' },
-              { icon: '✏️', title: 'Sender Details Pre-filled', desc: 'Your name, phone, address and city are automatically filled from your account.' },
-              { icon: '👤', title: 'Select Agent', desc: 'Select a registered agent from the dropdown.' },
-              { icon: '💰', title: 'Enter Amount', desc: 'Enter the amount – 4% charge applied.' },
-              { icon: '📱', title: 'Select Operator', desc: 'Select Mobile Money operator.' },
-              { icon: '📞', title: 'Generate USSD', desc: 'Tap operator button to generate USSD code.' },
-              { icon: '🔐', title: 'Enter PIN', desc: 'Enter your 4-digit PIN to complete.' },
-              { icon: '🧾', title: 'Receipt', desc: 'Receive a digital receipt.' }
-            ]
-          },
-          {
-            title: 'Send Money Internationally',
-            sub: 'Step-by-step international transfer guide',
-            content: `<p><strong>How to send money internationally:</strong></p>
-                     <ol class="step-list">
-                       <li><strong>Login</strong> to your AfriPay account.</li>
-                       <li><strong>Sender details</strong> are pre-filled automatically from your registration.</li>
-                       <li>Tap <strong>International</strong> toggle button.</li>
-                       <li>Check <strong>country flags strip</strong> – select agent matching recipient's country.</li>
-                       <li>Select <strong>recipient country</strong> – GST & currency update.</li>
-                       <li>Enter the <strong>amount</strong> – 4% transfer charge + GST applied.</li>
-                       <li>Select <strong>Mobile Money operator</strong>.</li>
-                       <li>Generate <strong>international USSD code</strong>.</li>
-                       <li>Enter <strong>4-digit PIN</strong> to complete.</li>
-                       <li>Receive <strong>digital receipt</strong> with exchange rate.</li>
-                     </ol>`,
-            steps: [
-              { icon: '🔑', title: 'Login', desc: 'Login to your AfriPay account.' },
-              { icon: '✏️', title: 'Sender Details Pre-filled', desc: 'Your name, phone, address and city are automatically filled from your account.' },
-              { icon: '🌍', title: 'International Mode', desc: 'Tap International toggle button.' },
-              { icon: '🏳️', title: 'Select Agent', desc: 'Check country flags strip – select agent matching recipient\'s country.' },
-              { icon: '🌍', title: 'Recipient Country', desc: 'Select recipient country – GST & currency update.' },
-              { icon: '💰', title: 'Enter Amount', desc: 'Enter the amount – 4% transfer charge + GST applied.' },
-              { icon: '📱', title: 'Select Operator', desc: 'Select Mobile Money operator.' },
-              { icon: '📞', title: 'Generate USSD', desc: 'Generate international USSD code.' },
-              { icon: '🔐', title: 'Enter PIN', desc: 'Enter 4-digit PIN to complete.' },
-              { icon: '🧾', title: 'Receipt', desc: 'Receive digital receipt with exchange rate.' }
-            ]
-          }
-        ]
-      },
-      ar: {
-        pages: [
-          { title: 'أفري باي', sub: 'مركز التحويلات المالية عبر الحدود', content: `<p><strong>أفري باي</strong> هو مركز دفع لغرب أفريقيا. يتيح التحويلات الفورية عبر <strong>أورانج موني، أفري موني، كيو موني و دبليو بي موني</strong>.</p><p style="margin-top:0.6rem;">المطور: <strong>محمد أمين جالو</strong> · NUSWEB للتقنيات المالية</p><p style="margin-top:0.4rem;">تم تصميمه لسيراليون، غينيا، السنغال، غانا، ليبيريا، والمزيد.</p>`, steps: [{icon:'🌍',title:'أفري باي',desc:'مركز دفع لغرب أفريقيا'},{icon:'📱',title:'التحويلات المالية',desc:'تحويلات فورية عبر أورانج موني، أفري موني، كيو موني و دبليو بي موني'},{icon:'👨‍💻',title:'المطور',desc:'محمد أمين جالو · NUSWEB'},{icon:'🌍',title:'الدول المدعومة',desc:'سيراليون، غينيا، السنغال، غانا، ليبيريا'}] },
-          { title: 'الوكيل والضمان', sub: 'تسجيل آمن للوكيل مع ضمان', content: `<p><strong>تسجيل الوكيل</strong> يتطلب اسم تجاري، هوية، وحد ضمان يصل إلى 10,000.</p><p style="margin-top:0.4rem;">الضمان يحمي العملاء. إذا فشل الوكيل في التسليم، يعوض المطور العميل من الضمان.</p><p style="margin-top:0.4rem;">يوقع الوكلاء اتفاقية رقمية ويحصلون على <strong>عمولة 7 بالمئة</strong> على التحويلات و <strong>12 بالمئة</strong> على السحب النقدي.</p>`, steps: [{icon:'🏢',title:'تسجيل الوكيل',desc:'يتطلب اسم تجاري، هوية، حد ضمان'},{icon:'🛡️',title:'حماية الضمان',desc:'الضمان يحمي العملاء'},{icon:'📜',title:'الاتفاقية الرقمية',desc:'يوقع الوكلاء اتفاقية رقمية'},{icon:'💰',title:'العمولة',desc:'7% على التحويلات، 12% على السحب'}] },
-          { title: 'أسعار حية وإيصالات', sub: 'محول عملات فوري وإيصالات رقمية', content: `<p><strong>محول العملات</strong> يستخدم أسعار صرف حية مع الدولار كقاعدة. احسب الرسوم بما في ذلك 4 بالمئة رسوم تحويل وضريبة القيمة المضافة.</p><p style="margin-top:0.4rem;">كل معاملة تولد إيصالاً مع معرف المعاملة، معرف مزود الخدمة، ورمز التحويل.</p><p style="margin-top:0.4rem;">يدعم أكثر من 20 دولة برموز USSD ديناميكية.</p>`, steps: [{icon:'💱',title:'محول العملات',desc:'أسعار صرف حية مع الدولار كقاعدة'},{icon:'📊',title:'حساب الرسوم',desc:'4% رسوم تحويل + ضريبة القيمة المضافة'},{icon:'🧾',title:'الإيصالات الرقمية',desc:'الإيصال يشمل معرف المعاملة ورمز التحويل'},{icon:'🌍',title:'دعم متعدد الدول',desc:'يدعم 20+ دولة برموز USSD'}] },
-          { title: 'تحميل أفري باي', sub: 'تحميل وتثبيت التطبيق', content: `<p><strong>كيف تحصل على أفري باي:</strong></p><div class="action-btn-group"><button class="action-btn nusapp" id="nusappBtn">📦 NUSAPPSTORE</button><button class="action-btn whatsapp" id="whatsappBtn">💬 واتساب</button><button class="action-btn xender" id="xenderBtn">📤 Xender</button><button class="action-btn bluetooth" id="bluetoothBtn">📡 بلوتوث</button><button class="action-btn usb" id="usbBtn">📁 USB</button><button class="action-btn cloud" id="cloudBtn">☁️ سحابة</button></div><ul class="step-list"><li><strong>NUSAPPSTORE</strong> – حمل تطبيق NUSAPPSTORE ثم ثبّت أفري باي.</li><li><strong>واتساب</strong> – أرسل رسالة إلى <strong>+23276436811</strong> لطلب APK.</li><li><strong>Xender</strong> – استخدم Xender للنقل المباشر.</li><li><strong>بلوتوث</strong> – استخدم البلوتوث لمشاركة الملف.</li><li><strong>USB أو OTG</strong> – انسخ من قرص USB.</li><li><strong>سحابة</strong> – شارك عبر Google Drive أو Dropbox.</li></ul>`, steps: [{icon:'📦',title:'NUSAPPSTORE',desc:'تحميل NUSAPPSTORE ثم تثبيت أفري باي'},{icon:'💬',title:'واتساب',desc:'إرسال رسالة إلى +23276436811'},{icon:'📤',title:'Xender',desc:'استخدام Xender للنقل المباشر'},{icon:'📡',title:'بلوتوث',desc:'استخدام البلوتوث لمشاركة الملف'},{icon:'📁',title:'USB',desc:'النسخ من قرص USB'},{icon:'☁️',title:'سحابة',desc:'المشاركة عبر Google Drive أو Dropbox'}] },
-          { title: 'إنشاء حساب مستخدم', sub: 'التسجيل خطوة بخطوة', content: `<p><strong>خطوات إنشاء حساب مستخدم:</strong></p><ol class="step-list"><li>افتح تطبيق أفري باي واضغط <strong>تسجيل</strong>.</li><li>أدخل <strong>الاسم الكامل</strong> و <strong>رقم الهاتف</strong> مع رمز البلد.</li><li>املأ <strong>العنوان</strong> واختر <strong>المدينة</strong>.</li><li>اختر <strong>البلد</strong> من القائمة.</li><li>اختر <strong>أيقونة الملف الشخصي</strong> أو حمّل صورتك.</li><li>اضغط <strong>تسجيل</strong> – يتم إنشاء حسابك فوراً.</li><li>يمكنك الآن <strong>تسجيل الدخول</strong> باسمك ورقم هاتفك.</li></ol>`, steps: [{icon:'📱',title:'فتح التطبيق',desc:'فتح أفري باي والضغط على تسجيل'},{icon:'✏️',title:'إدخال البيانات',desc:'الاسم الكامل ورقم الهاتف مع رمز البلد'},{icon:'📍',title:'العنوان والمدينة',desc:'ملأ العنوان واختيار المدينة'},{icon:'🌍',title:'اختيار البلد',desc:'اختيار البلد من القائمة'},{icon:'🖼️',title:'أيقونة الملف الشخصي',desc:'اختيار أيقونة أو تحميل صورة'},{icon:'✅',title:'تسجيل',desc:'الضغط على تسجيل – إنشاء الحساب فوراً'},{icon:'🔑',title:'تسجيل الدخول',desc:'تسجيل الدخول بالاسم ورقم الهاتف'}] },
-          { title: 'إنشاء حساب وكيل (ملخص)', sub: 'تسجيل الوكيل خطوة بخطوة - ملخص', content: `<p><strong>خطوات سريعة لإنشاء حساب وكيل:</strong></p><ol class="step-list"><li>اضغط <strong>تسجيل</strong> ثم اختر <strong>تسجيل كـ وكيل</strong>.</li><li>املأ <strong>الاسم التجاري، العنوان، المدينة، ورقم التسجيل</strong>.</li><li>اختر <strong>نوع النشاط</strong> وأدخل <strong>اسم المالك</strong>.</li><li>قدّم <strong>نوع الهوية ورقم الهوية</strong> وحمّل صورة الهوية.</li><li>أدخل <strong>رقم الهاتف المحمول</strong>.</li><li>حدد <strong>حد الضمان</strong> وولّد كلمة مرور و PIN.</li><li>اضغط <strong>إنشاء USSD</strong> لرمز دفع الضمان.</li><li>اقرأ و <strong>وقّع اتفاقية الوكيل</strong>.</li><li>اضغط <strong>تسجيل الوكيل</strong> – إرسال للموافقة.</li></ol><p style="margin-top:0.4rem;">للحصول على دليل تفصيلي خطوة بخطوة مع توقيع الاتفاقية، انظر الصفحة التالية.</p>`, steps: [{icon:'🏢',title:'بدء التسجيل',desc:'الضغط على تسجيل ثم تسجيل كـ وكيل'},{icon:'📝',title:'بيانات النشاط',desc:'الاسم التجاري، العنوان، المدينة، رقم التسجيل'},{icon:'👤',title:'المالك والنوع',desc:'نوع النشاط واسم المالك'},{icon:'🪪',title:'رفع الهوية',desc:'نوع الهوية ورقم الهوية وتحميل الصورة'},{icon:'📱',title:'الهاتف المحمول',desc:'إدخال رقم الهاتف المحمول'},{icon:'🔐',title:'الأمان',desc:'حد الضمان، كلمة مرور و PIN'},{icon:'📞',title:'إنشاء USSD',desc:'إنشاء USSD لرمز دفع الضمان'},{icon:'✍️',title:'التوقيع',desc:'قراءة وتوقيع اتفاقية الوكيل'},{icon:'✅',title:'إرسال',desc:'تسجيل الوكيل – إرسال للموافقة'}] },
-          { title: 'تفاصيل تسجيل الوكيل', sub: 'دليل كامل يشمل توقيع الاتفاقية', content: `<p><strong>خطوات تفصيلية لإنشاء حساب وكيل:</strong></p><ol class="step-list"><li>افتح تطبيق أفري باي واضغط <strong>تسجيل</strong>.</li><li>اختر <strong>تسجيل كـ وكيل</strong>.</li><li>املأ <strong>الاسم التجاري</strong>، <strong>العنوان التجاري</strong>، <strong>المدينة</strong>، و <strong>رقم التسجيل الرسمي</strong>.</li><li>اختر <strong>نوع النشاط التجاري</strong> وأدخل <strong>اسم المالك الكامل</strong>.</li><li>اختر <strong>نوع الهوية</strong> وأدخل <strong>رقم الهوية</strong>. حمّل صورة واضحة للهوية.</li><li>أدخل <strong>رقم الهاتف المحمول</strong> (الرقم المرتبط بحساب أورانج موني أو أفري موني).</li><li>حدد <strong>حد الضمان</strong> (الحد الأقصى للمعاملة). وولّد <strong>كلمة مرور من 6 أحرف</strong> و <strong>رقم PIN من 5 أرقام</strong>.</li><li>اضغط <strong>إنشاء USSD</strong> لإنشاء رمز دفع الضمان.</li><li><strong>اقرأ اتفاقية الوكيل</strong> بعناية. تحدد التزاماتك، ونسب العمولة (7% على التحويلات، 12% على السحب)، وسياسة الضمان.</li><li><strong>وقّع الاتفاقية</strong> برسم توقيعك على اللوحة المقدمة في التطبيق.</li><li>بعد التوقيع، اضغط <strong>تسجيل الوكيل</strong> لإرسال طلبك للموافقة.</li><li>ستتلقى تأكيداً وسيتم تفعيل حسابك بعد مراجعة المدير.</li></ol><p style="margin-top:0.4rem;">يحصل الوكلاء على <strong>عمولة 7%</strong> على التحويلات و <strong>12%</strong> على السحب.</p>`, steps: [{icon:'📱',title:'فتح التطبيق وتسجيل',desc:'فتح أفري باي، الضغط على تسجيل، اختيار تسجيل كـ وكيل'},{icon:'📝',title:'بيانات النشاط',desc:'الاسم التجاري، العنوان، المدينة، رقم التسجيل'},{icon:'👤',title:'المالك والنوع',desc:'نوع النشاط واسم المالك الكامل'},{icon:'🪪',title:'رفع الهوية',desc:'نوع الهوية، رقم الهوية، وتحميل الصورة'},{icon:'📱',title:'الهاتف المحمول',desc:'إدخال رقم الهاتف المحمول'},{icon:'🔐',title:'إعدادات الأمان',desc:'حد الضمان، كلمة مرور 6 أحرف، PIN 5 أرقام'},{icon:'📞',title:'إنشاء USSD',desc:'إنشاء USSD لرمز دفع الضمان'},{icon:'📜',title:'قراءة الاتفاقية',desc:'قراءة اتفاقية الوكيل بعناية'},{icon:'✍️',title:'توقيع الاتفاقية',desc:'رسم التوقيع على اللوحة'},{icon:'✅',title:'إرسال',desc:'الضغط على تسجيل الوكيل لإرسال الطلب'}] },
-          { title: 'إرسال الأموال محلياً', sub: 'دليل التحويل المحلي خطوة بخطوة', content: `<p><strong>كيف ترسل الأموال محلياً:</strong></p><ol class="step-list"><li><strong>سجل الدخول</strong> إلى حسابك.</li><li><strong>بيانات المرسل</strong> تملأ تلقائياً من حسابك المسجل.</li><li>اختر <strong>وكيلاً مسجلاً</strong> من القائمة.</li><li>أدخل <strong>المبلغ</strong> – تطبق رسوم 4%.</li><li>اختر <strong>مشغل الهاتف المحمول</strong>.</li><li>اضغط لإنشاء <strong>رمز USSD</strong>.</li><li>أدخل <strong>رقم PIN</strong> لإكمال المعاملة.</li><li>ستتلقى <strong>إيصالاً رقمياً</strong>.</li></ol>`, steps: [{icon:'🔑',title:'تسجيل الدخول',desc:'تسجيل الدخول إلى حسابك'},{icon:'✏️',title:'بيانات المرسل مملوءة',desc:'الاسم، الهاتف، العنوان والمدينة تملأ تلقائياً'},{icon:'👤',title:'اختيار الوكيل',desc:'اختيار وكيل مسجل من القائمة'},{icon:'💰',title:'المبلغ',desc:'إدخال المبلغ – رسوم 4%'},{icon:'📱',title:'اختيار المشغل',desc:'اختيار مشغل الهاتف المحمول'},{icon:'📞',title:'إنشاء USSD',desc:'إنشاء رمز USSD'},{icon:'🔐',title:'إدخال PIN',desc:'إدخال رقم PIN'},{icon:'🧾',title:'الإيصال',desc:'استلام إيصال رقمي'}] },
-          { title: 'إرسال الأموال دولياً', sub: 'دليل التحويل الدولي خطوة بخطوة', content: `<p><strong>كيف ترسل الأموال دولياً:</strong></p><ol class="step-list"><li><strong>سجل الدخول</strong> إلى حسابك.</li><li><strong>بيانات المرسل</strong> تملأ تلقائياً من حسابك المسجل.</li><li>اضغط زر <strong>دولي</strong>.</li><li>تحقق من <strong>شريط الأعلام</strong> – اختر وكيلاً يتطابق مع دولة المستلم.</li><li>اختر <strong>دولة المستلم</strong> – تحديث الضريبة والعملة.</li><li>أدخل <strong>المبلغ</strong> – تطبق رسوم 4% + ضريبة القيمة المضافة.</li><li>اختر <strong>مشغل الهاتف المحمول</strong>.</li><li>أنشئ <strong>رمز USSD دولي</strong>.</li><li>أدخل <strong>رقم PIN</strong> لإكمال المعاملة.</li><li>ستتلقى <strong>إيصالاً رقمياً</strong> مع سعر الصرف.</li></ol>`, steps: [{icon:'🔑',title:'تسجيل الدخول',desc:'تسجيل الدخول إلى حسابك'},{icon:'✏️',title:'بيانات المرسل مملوءة',desc:'الاسم، الهاتف، العنوان والمدينة تملأ تلقائياً'},{icon:'🌍',title:'الوضع الدولي',desc:'الضغط على زر دولي'},{icon:'🏳️',title:'اختيار الوكيل',desc:'اختيار وكيل يتطابق مع دولة المستلم'},{icon:'🌍',title:'دولة المستلم',desc:'اختيار دولة المستلم – تحديث الضريبة والعملة'},{icon:'💰',title:'المبلغ',desc:'إدخال المبلغ – رسوم 4% + ضريبة القيمة المضافة'},{icon:'📱',title:'اختيار المشغل',desc:'اختيار مشغل الهاتف المحمول'},{icon:'📞',title:'إنشاء USSD',desc:'إنشاء رمز USSD دولي'},{icon:'🔐',title:'إدخال PIN',desc:'إدخال رقم PIN'},{icon:'🧾',title:'الإيصال',desc:'استلام إيصال مع سعر الصرف'}] }
-        ]
-      },
-      fr: {
-        pages: [
-          { title: 'AfriPay', sub: 'Plateforme de transfert d\'argent transfrontalier', content: `<p><strong>AfriPay</strong> est une plateforme de paiement pour l\'Afrique de l\'Ouest. Elle permet des transferts instantanés via <strong>Orange Money, Afrimoney, QMoney et WBMoney</strong>.</p><p style="margin-top:0.6rem;">Développeur: <strong>Mohamed Amine Jalloh</strong> · NUSWEB</p><p style="margin-top:0.4rem;">Conçu pour la Sierra Leone, la Guinée, le Sénégal, le Ghana, le Liberia.</p>`, steps: [{icon:'🌍',title:'AfriPay',desc:'Plateforme de paiement pour l\'Afrique de l\'Ouest'},{icon:'📱',title:'Transferts',desc:'Transferts via Orange Money, Afrimoney, QMoney et WBMoney'},{icon:'👨‍💻',title:'Développeur',desc:'Mohamed Amine Jalloh · NUSWEB'},{icon:'🌍',title:'Pays',desc:'Sierra Leone, Guinée, Sénégal, Ghana, Liberia'}] },
-          { title: 'Agent et Garantie', sub: 'Inscription sécurisée des agents', content: `<p><strong>L\'inscription d\'un agent</strong> nécessite un nom commercial, une pièce d\'identité, et une limite de garantie jusqu\'à 10 000.</p><p style="margin-top:0.4rem;">La garantie protège les clients. Si un agent ne livre pas, le développeur compense le client.</p><p style="margin-top:0.4rem;">Les agents reçoivent <strong>7% de commission</strong> sur les transferts et <strong>12%</strong> sur les retraits.</p>`, steps: [{icon:'🏢',title:'Inscription agent',desc:'Nom commercial, ID, limite de garantie'},{icon:'🛡️',title:'Garantie',desc:'Protège les clients'},{icon:'📜',title:'Accord',desc:'Accord numérique signé'},{icon:'💰',title:'Commission',desc:'7% transferts, 12% retraits'}] },
-          { title: 'Taux en direct et Reçus', sub: 'Convertisseur de devises en temps réel', content: `<p><strong>Convertisseur de devises</strong> avec taux en direct. Frais: 4% de transfert + TVA.</p><p style="margin-top:0.4rem;">Reçu avec ID transaction, ID fournisseur, code transfert.</p><p style="margin-top:0.4rem;">20+ pays avec codes USSD dynamiques.</p>`, steps: [{icon:'💱',title:'Convertisseur',desc:'Taux en direct avec USD'},{icon:'📊',title:'Frais',desc:'4% de transfert + TVA'},{icon:'🧾',title:'Reçu',desc:'ID transaction, code transfert'},{icon:'🌍',title:'Pays',desc:'20+ pays avec codes USSD'}] },
-          { title: 'Obtenir AfriPay', sub: 'Télécharger et installer', content: `<p><strong>Comment obtenir AfriPay:</strong></p><div class="action-btn-group"><button class="action-btn nusapp" id="nusappBtn">📦 NUSAPPSTORE</button><button class="action-btn whatsapp" id="whatsappBtn">💬 WhatsApp</button><button class="action-btn xender" id="xenderBtn">📤 Xender</button><button class="action-btn bluetooth" id="bluetoothBtn">📡 Bluetooth</button><button class="action-btn usb" id="usbBtn">📁 USB</button><button class="action-btn cloud" id="cloudBtn">☁️ Cloud</button></div><ul class="step-list"><li><strong>NUSAPPSTORE</strong> – téléchargez NUSAPPSTORE puis AfriPay.</li><li><strong>WhatsApp</strong> – message <strong>+23276436811</strong> pour l'APK.</li><li><strong>Xender</strong> – transfert direct.</li><li><strong>Bluetooth</strong> – partage de fichier.</li><li><strong>USB ou OTG</strong> – copie depuis clé USB.</li><li><strong>Cloud</strong> – Google Drive, Dropbox.</li></ul>`, steps: [{icon:'📦',title:'NUSAPPSTORE',desc:'Télécharger NUSAPPSTORE puis AfriPay'},{icon:'💬',title:'WhatsApp',desc:'Message +23276436811'},{icon:'📤',title:'Xender',desc:'Transfert direct'},{icon:'📡',title:'Bluetooth',desc:'Partage de fichier'},{icon:'📁',title:'USB',desc:'Copie depuis clé USB'},{icon:'☁️',title:'Cloud',desc:'Google Drive, Dropbox'}] },
-          { title: 'Créer compte utilisateur', sub: 'Inscription étape par étape', content: `<p><strong>Étapes pour créer un compte:</strong></p><ol class="step-list"><li>Ouvrir AfriPay et appuyer <strong>Inscription</strong>.</li><li>Entrer <strong>Nom complet</strong> et <strong>Téléphone</strong> avec indicatif.</li><li>Remplir <strong>Adresse</strong> et sélectionner <strong>Ville</strong>.</li><li>Choisir <strong>Pays</strong>.</li><li>Choisir <strong>Icône de profil</strong> ou télécharger image.</li><li>Appuyer <strong>Inscription</strong> – compte créé.</li><li>Se <strong>connecter</strong> avec nom et téléphone.</li></ol>`, steps: [{icon:'📱',title:'Ouvrir AfriPay',desc:'Appuyer Inscription'},{icon:'✏️',title:'Nom et Téléphone',desc:'Nom complet et téléphone avec indicatif'},{icon:'📍',title:'Adresse',desc:'Adresse et ville'},{icon:'🌍',title:'Pays',desc:'Choisir pays'},{icon:'🖼️',title:'Icône',desc:'Icône de profil ou image'},{icon:'✅',title:'Inscription',desc:'Appuyer Inscription – compte créé'},{icon:'🔑',title:'Connexion',desc:'Se connecter avec nom et téléphone'}] },
-          { title: 'Créer compte agent (résumé)', sub: 'Inscription de l\'agent - résumé', content: `<p><strong>Étapes rapides pour créer un compte agent:</strong></p><ol class="step-list"><li>Appuyer <strong>Inscription</strong> puis <strong>Inscription agent</strong>.</li><li>Remplir <strong>Nom commercial, Adresse, Ville, N° enregistrement</strong>.</li><li>Sélectionner <strong>Type d\'entreprise</strong> et <strong>Nom du propriétaire</strong>.</li><li>Fournir <strong>Type ID et N° ID</strong> et télécharger photo.</li><li>Entrer <strong>N° Mobile Money</strong>.</li><li>Définir <strong>Limite de garantie</strong>, générer mot de passe et PIN.</li><li>Appuyer <strong>Générer USSD</strong>.</li><li>Lire et <strong>signer l\'accord</strong>.</li><li>Appuyer <strong>Inscrire agent</strong> – soumis pour approbation.</li></ol><p style="margin-top:0.4rem;">Pour un guide détaillé avec signature de l'accord, voir la page suivante.</p>`, steps: [{icon:'🏢',title:'Début',desc:'Inscription puis Inscription agent'},{icon:'📝',title:'Entreprise',desc:'Nom, adresse, ville, N° enregistrement'},{icon:'👤',title:'Propriétaire',desc:'Type d\'entreprise et nom'},{icon:'🪪',title:'ID',desc:'Type ID, N° ID, photo'},{icon:'📱',title:'Mobile Money',desc:'N° Mobile Money'},{icon:'🔐',title:'Sécurité',desc:'Limite de garantie, mot de passe, PIN'},{icon:'📞',title:'USSD',desc:'Générer USSD'},{icon:'✍️',title:'Accord',desc:'Lire et signer l\'accord'},{icon:'✅',title:'Soumettre',desc:'Inscrire agent – soumis'}] },
-          { title: 'Détails de l\'inscription agent', sub: 'Guide complet incluant la signature de l\'accord', content: `<p><strong>Étapes détaillées pour créer un compte agent:</strong></p><ol class="step-list"><li>Ouvrir l\'application AfriPay et appuyer sur <strong>Inscription</strong>.</li><li>Sélectionner <strong>Inscription en tant qu\'agent</strong>.</li><li>Remplir <strong>Nom commercial</strong>, <strong>Adresse commerciale</strong>, <strong>Ville</strong>, et <strong>Numéro d\'enregistrement officiel</strong>.</li><li>Choisir le <strong>Type d\'entreprise</strong> et entrer le <strong>Nom complet du propriétaire</strong>.</li><li>Sélectionner le <strong>Type d\'ID</strong> et entrer le <strong>Numéro d\'ID</strong>. Télécharger une photo claire de votre ID.</li><li>Entrer votre <strong>Numéro Mobile Money</strong> (le numéro lié à votre compte Orange Money ou Afrimoney).</li><li>Définir une <strong>Limite de garantie</strong> (montant maximal de transaction). Générer un <strong>mot de passe de 6 caractères</strong> et un <strong>PIN de 5 chiffres</strong>.</li><li>Appuyer sur <strong>Générer USSD</strong> pour créer un code de paiement de garantie.</li><li><strong>Lire l\'accord d\'agent</strong> attentivement. Il décrit vos obligations, les taux de commission (7% sur les transferts, 12% sur les retraits) et la politique de garantie.</li><li><strong>Signer l\'accord</strong> en dessinant votre signature sur le canvas fourni dans l\'application.</li><li>Une fois signé, appuyer sur <strong>Inscrire l\'agent</strong> pour soumettre votre demande d\'approbation.</li><li>Vous recevrez une confirmation et votre compte sera activé après examen par l\'administrateur.</li></ol><p style="margin-top:0.4rem;">Les agents gagnent <strong>7% de commission</strong> sur les transferts et <strong>12%</strong> sur les retraits.</p>`, steps: [{icon:'📱',title:'Ouvrir & Inscription',desc:'Ouvrir AfriPay, appuyer Inscription, sélectionner Inscription agent'},{icon:'📝',title:'Détails entreprise',desc:'Nom commercial, adresse, ville, N° enregistrement'},{icon:'👤',title:'Propriétaire & type',desc:'Type d\'entreprise et nom complet'},{icon:'🪪',title:'Télécharger ID',desc:'Type ID, numéro ID, télécharger photo'},{icon:'📱',title:'Mobile Money',desc:'Entrer N° Mobile Money'},{icon:'🔐',title:'Sécurité',desc:'Limite de garantie, mot de passe 6 caractères, PIN 5 chiffres'},{icon:'📞',title:'Générer USSD',desc:'Générer USSD pour paiement de garantie'},{icon:'📜',title:'Lire accord',desc:'Lire attentivement l\'accord d\'agent'},{icon:'✍️',title:'Signer accord',desc:'Dessiner la signature sur le canvas'},{icon:'✅',title:'Soumettre',desc:'Appuyer Inscrire agent pour soumettre'}] },
-          { title: 'Envoyer localement', sub: 'Guide de transfert local', content: `<p><strong>Comment envoyer localement:</strong></p><ol class="step-list"><li><strong>Connectez-vous</strong>.</li><li>Les <strong>détails de l\'expéditeur</strong> sont pré-remplis automatiquement depuis votre compte.</li><li>Sélectionnez un <strong>agent enregistré</strong>.</li><li>Entrez le <strong>montant</strong> – 4% de frais.</li><li>Sélectionnez l'<strong>opérateur</strong>.</li><li>Générez un <strong>code USSD</strong>.</li><li>Entrez votre <strong>PIN</strong>.</li><li>Recevez un <strong>reçu numérique</strong>.</li></ol>`, steps: [{icon:'🔑',title:'Connexion',desc:'Connectez-vous'},{icon:'✏️',title:'Expéditeur pré-rempli',desc:'Nom, téléphone, adresse et ville sont automatiquement remplis'},{icon:'👤',title:'Agent',desc:'Sélectionnez un agent enregistré'},{icon:'💰',title:'Montant',desc:'Entrez le montant – 4% de frais'},{icon:'📱',title:'Opérateur',desc:'Sélectionnez l\'opérateur'},{icon:'📞',title:'USSD',desc:'Générez un code USSD'},{icon:'🔐',title:'PIN',desc:'Entrez votre PIN'},{icon:'🧾',title:'Reçu',desc:'Recevez un reçu numérique'}] },
-          { title: 'Envoyer internationalement', sub: 'Guide de transfert international', content: `<p><strong>Comment envoyer internationalement:</strong></p><ol class="step-list"><li><strong>Connectez-vous</strong>.</li><li>Les <strong>détails de l\'expéditeur</strong> sont pré-remplis automatiquement depuis votre compte.</li><li>Appuyez <strong>International</strong>.</li><li>Vérifiez la <strong>bande de drapeaux</strong> – sélectionnez agent correspondant.</li><li>Sélectionnez <strong>pays du destinataire</strong>.</li><li>Entrez le <strong>montant</strong> – 4% de frais + TVA.</li><li>Sélectionnez l'<strong>opérateur</strong>.</li><li>Générez un <strong>code USSD international</strong>.</li><li>Entrez votre <strong>PIN</strong>.</li><li>Recevez un <strong>reçu</strong> avec le taux de change.</li></ol>`, steps: [{icon:'🔑',title:'Connexion',desc:'Connectez-vous'},{icon:'✏️',title:'Expéditeur pré-rempli',desc:'Nom, téléphone, adresse et ville sont automatiquement remplis'},{icon:'🌍',title:'International',desc:'Appuyez International'},{icon:'🏳️',title:'Agent',desc:'Sélectionnez agent correspondant'},{icon:'🌍',title:'Pays',desc:'Sélectionnez pays du destinataire'},{icon:'💰',title:'Montant',desc:'Entrez le montant – 4% + TVA'},{icon:'📱',title:'Opérateur',desc:'Sélectionnez l\'opérateur'},{icon:'📞',title:'USSD',desc:'Générez un code USSD international'},{icon:'🔐',title:'PIN',desc:'Entrez votre PIN'},{icon:'🧾',title:'Reçu',desc:'Reçu avec taux de change'}] }
-        ]
-      },
-      es: {
-        pages: [
-          { title: 'AfriPay', sub: 'Centro de transferencias móviles', content: `<p><strong>AfriPay</strong> es un centro de pagos para África Occidental. Permite transferencias instantáneas vía <strong>Orange Money, Afrimoney, QMoney y WBMoney</strong>.</p><p style="margin-top:0.6rem;">Desarrollador: <strong>Mohamed Amine Jalloh</strong> · NUSWEB</p><p style="margin-top:0.4rem;">Para Sierra Leona, Guinea, Senegal, Ghana, Liberia.</p>`, steps: [{icon:'🌍',title:'AfriPay',desc:'Centro de pagos para África Occidental'},{icon:'📱',title:'Transferencias',desc:'Vía Orange Money, Afrimoney, QMoney y WBMoney'},{icon:'👨‍💻',title:'Desarrollador',desc:'Mohamed Amine Jalloh · NUSWEB'},{icon:'🌍',title:'Países',desc:'Sierra Leona, Guinea, Senegal, Ghana, Liberia'}] },
-          { title: 'Agente y Garantía', sub: 'Registro seguro de agentes', content: `<p><strong>Registro de agente</strong> requiere nombre comercial, ID y límite de garantía hasta 10,000.</p><p style="margin-top:0.4rem;">Garantía protege clientes. Si agente falla, desarrollador compensa.</p><p style="margin-top:0.4rem;">Agentes reciben <strong>7% de comisión</strong> en transferencias y <strong>12%</strong> en retiros.</p>`, steps: [{icon:'🏢',title:'Registro agente',desc:'Nombre comercial, ID, límite de garantía'},{icon:'🛡️',title:'Garantía',desc:'Protege clientes'},{icon:'📜',title:'Acuerdo',desc:'Acuerdo digital firmado'},{icon:'💰',title:'Comisión',desc:'7% transferencias, 12% retiros'}] },
-          { title: 'Tasas y Recibos', sub: 'Conversor de divisas en tiempo real', content: `<p><strong>Conversor de divisas</strong> con tasas en vivo. Cargo: 4% transferencia + IVA.</p><p style="margin-top:0.4rem;">Recibo con ID transacción, ID proveedor, código transferencia.</p><p style="margin-top:0.4rem;">20+ países con códigos USSD dinámicos.</p>`, steps: [{icon:'💱',title:'Conversor',desc:'Tasas en vivo con USD'},{icon:'📊',title:'Cargos',desc:'4% transferencia + IVA'},{icon:'🧾',title:'Recibo',desc:'ID transacción, código transferencia'},{icon:'🌍',title:'Países',desc:'20+ países con códigos USSD'}] },
-          { title: 'Obtener AfriPay', sub: 'Descargar e instalar', content: `<p><strong>Cómo obtener AfriPay:</strong></p><div class="action-btn-group"><button class="action-btn nusapp" id="nusappBtn">📦 NUSAPPSTORE</button><button class="action-btn whatsapp" id="whatsappBtn">💬 WhatsApp</button><button class="action-btn xender" id="xenderBtn">📤 Xender</button><button class="action-btn bluetooth" id="bluetoothBtn">📡 Bluetooth</button><button class="action-btn usb" id="usbBtn">📁 USB</button><button class="action-btn cloud" id="cloudBtn">☁️ Cloud</button></div><ul class="step-list"><li><strong>NUSAPPSTORE</strong> – descargue NUSAPPSTORE luego AfriPay.</li><li><strong>WhatsApp</strong> – mensaje a <strong>+23276436811</strong> para APK.</li><li><strong>Xender</strong> – transferencia directa.</li><li><strong>Bluetooth</strong> – compartir archivo.</li><li><strong>USB o OTG</strong> – copiar desde USB.</li><li><strong>Cloud</strong> – Google Drive, Dropbox.</li></ul>`, steps: [{icon:'📦',title:'NUSAPPSTORE',desc:'Descargar NUSAPPSTORE luego AfriPay'},{icon:'💬',title:'WhatsApp',desc:'Mensaje a +23276436811'},{icon:'📤',title:'Xender',desc:'Transferencia directa'},{icon:'📡',title:'Bluetooth',desc:'Compartir archivo'},{icon:'📁',title:'USB',desc:'Copiar desde USB'},{icon:'☁️',title:'Cloud',desc:'Google Drive, Dropbox'}] },
-          { title: 'Crear cuenta usuario', sub: 'Registro paso a paso', content: `<p><strong>Pasos para crear cuenta:</strong></p><ol class="step-list"><li>Abrir AfriPay y tocar <strong>Registrarse</strong>.</li><li>Ingresar <strong>Nombre completo</strong> y <strong>Teléfono</strong> con código.</li><li>Completar <strong>Dirección</strong> y seleccionar <strong>Ciudad</strong>.</li><li>Elegir <strong>País</strong>.</li><li>Elegir <strong>Icono de perfil</strong> o cargar imagen.</li><li>Tocar <strong>Registrarse</strong> – cuenta creada.</li><li><strong>Iniciar sesión</strong> con nombre y teléfono.</li></ol>`, steps: [{icon:'📱',title:'Abrir AfriPay',desc:'Tocar Registrarse'},{icon:'✏️',title:'Nombre y Teléfono',desc:'Nombre completo y teléfono con código'},{icon:'📍',title:'Dirección',desc:'Dirección y ciudad'},{icon:'🌍',title:'País',desc:'Elegir país'},{icon:'🖼️',title:'Icono',desc:'Icono de perfil o imagen'},{icon:'✅',title:'Registrarse',desc:'Tocar Registrarse – cuenta creada'},{icon:'🔑',title:'Iniciar sesión',desc:'Iniciar sesión con nombre y teléfono'}] },
-          { title: 'Crear cuenta agente (resumen)', sub: 'Registro de agente - resumen', content: `<p><strong>Pasos rápidos para crear cuenta agente:</strong></p><ol class="step-list"><li>Tocar <strong>Registrarse</strong> luego <strong>Registrarse como agente</strong>.</li><li>Completar <strong>Nombre comercial, Dirección, Ciudad, N° registro</strong>.</li><li>Seleccionar <strong>Tipo de negocio</strong> y <strong>Nombre del propietario</strong>.</li><li>Proporcionar <strong>Tipo ID y N° ID</strong>, cargar foto.</li><li>Ingresar <strong>N° Mobile Money</strong>.</li><li>Definir <strong>Límite de garantía</strong>, generar contraseña y PIN.</li><li>Tocar <strong>Generar USSD</strong>.</li><li>Leer y <strong>firmar acuerdo</strong>.</li><li>Tocar <strong>Registrar agente</strong> – enviado para aprobación.</li></ol><p style="margin-top:0.4rem;">Para una guía detallada con la firma del acuerdo, ver la página siguiente.</p>`, steps: [{icon:'🏢',title:'Inicio',desc:'Registrarse luego Registrarse como agente'},{icon:'📝',title:'Empresa',desc:'Nombre, dirección, ciudad, N° registro'},{icon:'👤',title:'Propietario',desc:'Tipo de negocio y nombre'},{icon:'🪪',title:'ID',desc:'Tipo ID, N° ID, foto'},{icon:'📱',title:'Mobile Money',desc:'N° Mobile Money'},{icon:'🔐',title:'Seguridad',desc:'Límite de garantía, contraseña, PIN'},{icon:'📞',title:'USSD',desc:'Generar USSD'},{icon:'✍️',title:'Acuerdo',desc:'Leer y firmar acuerdo'},{icon:'✅',title:'Enviar',desc:'Registrar agente – enviado'}] },
-          { title: 'Detalles de registro de agente', sub: 'Guía completa incluyendo firma del acuerdo', content: `<p><strong>Pasos detallados para crear una cuenta de agente:</strong></p><ol class="step-list"><li>Abrir la aplicación AfriPay y tocar <strong>Registrarse</strong>.</li><li>Seleccionar <strong>Registrarse como agente</strong>.</li><li>Completar <strong>Nombre comercial</strong>, <strong>Dirección comercial</strong>, <strong>Ciudad</strong>, y <strong>Número de registro oficial</strong>.</li><li>Elegir el <strong>Tipo de negocio</strong> e ingresar el <strong>Nombre completo del propietario</strong>.</li><li>Seleccionar el <strong>Tipo de ID</strong> e ingresar el <strong>Número de ID</strong>. Cargar una foto clara de su ID.</li><li>Ingresar su <strong>Número de Mobile Money</strong> (el número vinculado a su cuenta de Orange Money o Afrimoney).</li><li>Establecer un <strong>Límite de garantía</strong> (monto máximo de transacción). Generar una <strong>contraseña de 6 caracteres</strong> y un <strong>PIN de 5 dígitos</strong>.</li><li>Tocar <strong>Generar USSD</strong> para crear un código de pago de garantía.</li><li><strong>Leer el acuerdo de agente</strong> cuidadosamente. Describe sus obligaciones, tasas de comisión (7% en transferencias, 12% en retiros) y la política de garantía.</li><li><strong>Firmar el acuerdo</strong> dibujando su firma en el lienzo proporcionado en la aplicación.</li><li>Una vez firmado, tocar <strong>Registrar agente</strong> para enviar su solicitud de aprobación.</li><li>Recibirá una confirmación y su cuenta será activada después de la revisión del administrador.</li></ol><p style="margin-top:0.4rem;">Los agentes ganan <strong>7% de comisión</strong> en transferencias y <strong>12%</strong> en retiros.</p>`, steps: [{icon:'📱',title:'Abrir y Registrarse',desc:'Abrir AfriPay, tocar Registrarse, seleccionar Registrarse como agente'},{icon:'📝',title:'Detalles del negocio',desc:'Nombre comercial, dirección, ciudad, N° registro'},{icon:'👤',title:'Propietario y tipo',desc:'Tipo de negocio y nombre completo'},{icon:'🪪',title:'Cargar ID',desc:'Tipo ID, número ID, cargar foto'},{icon:'📱',title:'Mobile Money',desc:'Ingresar N° Mobile Money'},{icon:'🔐',title:'Seguridad',desc:'Límite de garantía, contraseña 6 caracteres, PIN 5 dígitos'},{icon:'📞',title:'Generar USSD',desc:'Generar USSD para pago de garantía'},{icon:'📜',title:'Leer acuerdo',desc:'Leer atentamente el acuerdo de agente'},{icon:'✍️',title:'Firmar acuerdo',desc:'Dibujar la firma en el lienzo'},{icon:'✅',title:'Enviar',desc:'Tocar Registrar agente para enviar'}] },
-          { title: 'Enviar localmente', sub: 'Guía de transferencia local', content: `<p><strong>Cómo enviar localmente:</strong></p><ol class="step-list"><li><strong>Iniciar sesión</strong>.</li><li>Los <strong>datos del remitente</strong> se rellenan automáticamente desde tu cuenta.</li><li>Seleccionar <strong>agente registrado</strong>.</li><li>Ingresar <strong>monto</strong> – 4% de cargo.</li><li>Seleccionar <strong>operador</strong>.</li><li>Generar <strong>código USSD</strong>.</li><li>Ingresar <strong>PIN</strong>.</li><li>Recibir <strong>recibo digital</strong>.</li></ol>`, steps: [{icon:'🔑',title:'Iniciar sesión',desc:'Iniciar sesión'},{icon:'✏️',title:'Remitente pre-llenado',desc:'Nombre, teléfono, dirección y ciudad se rellenan automáticamente'},{icon:'👤',title:'Agente',desc:'Seleccionar agente registrado'},{icon:'💰',title:'Monto',desc:'Ingresar monto – 4% de cargo'},{icon:'📱',title:'Operador',desc:'Seleccionar operador'},{icon:'📞',title:'USSD',desc:'Generar código USSD'},{icon:'🔐',title:'PIN',desc:'Ingresar PIN'},{icon:'🧾',title:'Recibo',desc:'Recibir recibo digital'}] },
-          { title: 'Enviar internacionalmente', sub: 'Guía de transferencia internacional', content: `<p><strong>Cómo enviar internacionalmente:</strong></p><ol class="step-list"><li><strong>Iniciar sesión</strong>.</li><li>Los <strong>datos del remitente</strong> se rellenan automáticamente desde tu cuenta.</li><li>Tocar <strong>Internacional</strong>.</li><li>Revisar <strong>banda de banderas</strong> – seleccionar agente correspondiente.</li><li>Seleccionar <strong>país del destinatario</strong>.</li><li>Ingresar <strong>monto</strong> – 4% de cargo + IVA.</li><li>Seleccionar <strong>operador</strong>.</li><li>Generar <strong>código USSD internacional</strong>.</li><li>Ingresar <strong>PIN</strong>.</li><li>Recibir <strong>recibo</strong> con tipo de cambio.</li></ol>`, steps: [{icon:'🔑',title:'Iniciar sesión',desc:'Iniciar sesión'},{icon:'✏️',title:'Remitente pre-llenado',desc:'Nombre, teléfono, dirección y ciudad se rellenan automáticamente'},{icon:'🌍',title:'Internacional',desc:'Tocar Internacional'},{icon:'🏳️',title:'Agente',desc:'Seleccionar agente correspondiente'},{icon:'🌍',title:'País',desc:'Seleccionar país del destinatario'},{icon:'💰',title:'Monto',desc:'Ingresar monto – 4% + IVA'},{icon:'📱',title:'Operador',desc:'Seleccionar operador'},{icon:'📞',title:'USSD',desc:'Generar código USSD internacional'},{icon:'🔐',title:'PIN',desc:'Ingresar PIN'},{icon:'🧾',title:'Recibo',desc:'Recibo con tipo de cambio'}] }
-        ]
-      }
-    };
+/* ============================================================
+   AFRI-PAY ADMIN DASHBOARD — FULL APP SCRIPT
+   ============================================================ */
 
-    // ---------- STATE ----------
-    let currentIndex = 0;
-    const total = 9; // Updated to 9 pages
-    let currentLang = 'en';
-    let speechSynth = window.speechSynthesis;
-    let currentUtterance = null;
-    let isSpeaking = false;
-    let typingInterval = null;
-    let typewriterTimeout = null;
-    let isTypingComplete = false;
+/* ---------------- CONFIG ---------------- */
+const SUPABASE_URL = 'https://adxtvefswcosnooezdha.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkeHR2ZWZzd2Nvc25vb2V6ZGhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNzU1NzQsImV4cCI6MjEwNDY1MTU3NH0.zfeZdUzCHcRCcBCkgrtvp5uriqcK0FyI5xGiHNMk42A';
 
-    // Slideshow state
-    let slideSteps = [];
-    let slideIndex = 0;
-    let slideInterval = null;
-    let isSlidePlaying = false;
-    let slideVoiceUtterance = null;
-    let slideVoiceSpeaking = false;
+/* 🔑 CHANGE THESE.
+   BOOTSTRAP_PASSWORD = emergency login (works before any admin exists)
+   ADMIN_INVITE_CODE  = required to register a new admin
+   Keep them equal the FIRST time so you can log in and register yourself.
+   After your own account is created, you can leave them or change them. */
+const BOOTSTRAP_PASSWORD = 'AfriPay#Admin2026';
+const ADMIN_INVITE_CODE  = 'AfriPay#Admin2026';
 
-    // DOM refs
-    const titleEl = document.getElementById('pageTitle');
-    const subEl = document.getElementById('pageSub');
-    const contentEl = document.getElementById('pageContent');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const pageCounter = document.getElementById('pageCounter');
-    const dotsContainer = document.getElementById('stepDots');
-    const playBtn = document.getElementById('playAudioBtn');
-    const videoBtn = document.getElementById('playVideoBtn');
-    const langSelect = document.getElementById('audioLangSelect');
-    const audioStatus = document.getElementById('audioStatus');
-    const videoOverlay = document.getElementById('videoOverlay');
+/* ---------------- SUPABASE INIT ---------------- */
+let sb = null;
+try {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✅ Supabase client ready');
+} catch (e) {
+    console.error('❌ Supabase init failed:', e);
+}
 
-    // Slide DOM
-    const slideStepCounter = document.getElementById('slideStepCounter');
-    const slideProgressFill = document.getElementById('slideProgressFill');
-    const slideIcon = document.getElementById('slideIcon');
-    const slideTitle = document.getElementById('slideTitle');
-    const slideDesc = document.getElementById('slideDesc');
-    const slideDots = document.getElementById('slideDots');
-    const slidePrevBtn = document.getElementById('slidePrevBtn');
-    const slideNextBtn = document.getElementById('slideNextBtn');
-    const slidePlayBtn = document.getElementById('slidePlayBtn');
-    const slideCloseBtn = document.getElementById('slideCloseBtn');
-    const slideVoiceStatus = document.getElementById('slideVoiceStatus');
-    const slideLangDisplay = document.getElementById('slideLangDisplay');
+/* ---------------- SHORTCUTS ---------------- */
+const $ = function(id) { return document.getElementById(id); };
 
-    // ---------- BUILD DOTS ----------
-    function buildDots() {
-      dotsContainer.innerHTML = '';
-      for (let i = 0; i < total; i++) {
-        const dot = document.createElement('span');
-        dot.className = 'step-dot';
-        dot.dataset.index = i;
-        dotsContainer.appendChild(dot);
-      }
-    }
-    buildDots();
-    const dots = document.querySelectorAll('.step-dot');
-
-    // ---------- GET PAGE DATA ----------
-    function getPageData(index) {
-      const langData = translations[currentLang] || translations.en;
-      return langData.pages[index] || langData.pages[0];
-    }
-
-    // ---------- TYPEWRITER ----------
-    function startTypewriter(htmlContent) {
-      stopTypewriter();
-      isTypingComplete = false;
-      contentEl.innerHTML = '<span class="typing-cursor"></span>';
-      contentEl.classList.add('animating');
-
-      const tokens = parseHTMLTokens(htmlContent);
-      let currentTokenIndex = 0;
-      let accumulatedHTML = '';
-
-      function typeNextChar() {
-        if (currentTokenIndex >= tokens.length) {
-          isTypingComplete = true;
-          contentEl.innerHTML = htmlContent;
-          contentEl.classList.remove('animating');
-          return;
-        }
-        const token = tokens[currentTokenIndex];
-        if (token.type === 'tag') {
-          accumulatedHTML += token.content;
-          currentTokenIndex++;
-          typeNextChar();
-          return;
-        } else if (token.type === 'text') {
-          const text = token.content;
-          let charIndex = 0;
-          const interval = setInterval(() => {
-            if (charIndex < text.length) {
-              accumulatedHTML += text[charIndex];
-              charIndex++;
-              contentEl.innerHTML = accumulatedHTML + '<span class="typing-cursor"></span>';
-              contentEl.scrollTop = contentEl.scrollHeight;
-            } else {
-              clearInterval(interval);
-              currentTokenIndex++;
-              typeNextChar();
-            }
-          }, 30);
-          return;
-        }
-      }
-      typeNextChar();
-    }
-
-    function parseHTMLTokens(html) {
-      const tokens = [];
-      let i = 0;
-      while (i < html.length) {
-        if (html[i] === '<') {
-          let j = html.indexOf('>', i);
-          if (j === -1) break;
-          tokens.push({ type: 'tag', content: html.substring(i, j + 1) });
-          i = j + 1;
-        } else {
-          let j = html.indexOf('<', i);
-          if (j === -1) j = html.length;
-          const text = html.substring(i, j);
-          if (text.length > 0) tokens.push({ type: 'text', content: text });
-          i = j;
-        }
-      }
-      return tokens;
-    }
-
-    function stopTypewriter() {
-      if (typingInterval) { clearInterval(typingInterval); typingInterval = null; }
-      if (typewriterTimeout) { clearTimeout(typewriterTimeout); typewriterTimeout = null; }
-      contentEl.classList.remove('animating');
-      const cursor = contentEl.querySelector('.typing-cursor');
-      if (cursor) cursor.remove();
-    }
-
-    // ---------- RENDER PAGE ----------
-    function renderPage(index, animate = true) {
-      const page = getPageData(index);
-      titleEl.textContent = page.title;
-      subEl.textContent = page.sub;
-
-      if (isSpeaking) { speechSynth.cancel(); isSpeaking = false; audioStatus.textContent = 'Stopped'; playBtn.disabled = false; }
-      stopTypewriter();
-
-      if (animate) startTypewriter(page.content);
-      else { contentEl.innerHTML = page.content; isTypingComplete = true; }
-
-      dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
-      pageCounter.textContent = `${index+1} / ${total}`;
-      prevBtn.disabled = index === 0;
-      nextBtn.textContent = index === total - 1 ? '✨ Done' : 'Next ▶';
-      audioStatus.textContent = 'Ready';
-      playBtn.disabled = false;
-      videoBtn.disabled = false;
-
-      if (index === 3) attachActionButtons();
-    }
-
-    // ---------- ACTION BUTTONS ----------
-    function attachActionButtons() {
-      const nusappBtn = document.getElementById('nusappBtn');
-      if (nusappBtn) nusappBtn.onclick = () => window.open('https://nusappstore.com', '_blank');
-      const whatsappBtn = document.getElementById('whatsappBtn');
-      if (whatsappBtn) whatsappBtn.onclick = () => window.open('https://wa.me/23276436811', '_blank');
-      const xenderBtn = document.getElementById('xenderBtn');
-      if (xenderBtn) xenderBtn.onclick = () => {
-        window.location.href = 'xender://';
-        setTimeout(() => window.open('https://play.google.com/store/apps/details?id=com.xender', '_blank'), 500);
-      };
-      const bluetoothBtn = document.getElementById('bluetoothBtn');
-      if (bluetoothBtn) bluetoothBtn.onclick = () => {
-        if (navigator.bluetooth && navigator.bluetooth.requestDevice) {
-          navigator.bluetooth.requestDevice({ acceptAllDevices: true }).catch(() => {});
-        } else {
-          window.location.href = 'intent://settings/bluetooth/#Intent;action=android.settings.BLUETOOTH_SETTINGS;end';
-        }
-      };
-      const usbBtn = document.getElementById('usbBtn');
-      if (usbBtn) usbBtn.onclick = () => showToast('Plug in a USB drive or OTG cable to transfer the APK file.');
-      const cloudBtn = document.getElementById('cloudBtn');
-      if (cloudBtn) cloudBtn.onclick = () => showToast('Share via Google Drive, Dropbox, or any cloud service.');
-    }
-
-    function showToast(msg) {
-      audioStatus.textContent = 'ℹ️ ' + msg;
-      setTimeout(() => { if (audioStatus.textContent === 'ℹ️ ' + msg) audioStatus.textContent = 'Ready'; }, 3000);
-    }
-
-    // ---------- NAVIGATION ----------
-    function goTo(index) {
-      if (index < 0 || index >= total) return;
-      currentIndex = index;
-      renderPage(currentIndex, true);
-    }
-
-    prevBtn.addEventListener('click', () => goTo(currentIndex - 1));
-    nextBtn.addEventListener('click', () => {
-      if (currentIndex === total - 1) {
-        audioStatus.textContent = '🎉 Guide complete!';
-        playBtn.disabled = true;
-        videoBtn.disabled = true;
-        if (isSpeaking) { speechSynth.cancel(); isSpeaking = false; }
-        return;
-      }
-      goTo(currentIndex + 1);
+function toast(msg, dur) {
+    dur = dur || 2400;
+    const t = $('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.style.opacity = '1';
+    clearTimeout(t._t);
+    t._t = setTimeout(function() { t.style.opacity = '0'; }, dur);
+}
+function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, function(c) {
+        return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
     });
+}
+function when(ts) { return ts ? new Date(ts).toLocaleString() : '—'; }
 
-    // ---------- SPEECH ----------
-    function stripIcons(text) {
-      return text.replace(/[\u{1F000}-\u{1FFFF}]|[\u2600-\u27BF]|[\u{1F300}-\u{1F5FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F700}-\u{1F77F}]|[\u{1F780}-\u{1F7FF}]|[\u{1F800}-\u{1F8FF}]|[\u{1F900}-\u{1F9FF}]|[\u{1FA00}-\u{1FA6F}]|[\u{1FA70}-\u{1FAFF}]|[\u{1FB00}-\u{1FBFF}]|[\u{1FC00}-\u{1FCFF}]|[\u{1FD00}-\u{1FDFF}]|[\u{1FE00}-\u{1FEFF}]|[\u{1FF00}-\u{1FFFF}]|[☀-⛿]|[✀-➿]|[🌐-🏿]|[🍀-🧿]|[🀀-🿿]|[😀-🙏]|[🚀-🛿]|[🜀-🝿]|[🞀-🟿]|[🤀-🫿]/gu, '');
-    }
+/* ============================================================
+   PASSWORD HASHING  (SHA-256 + fixed salt)
+   ============================================================ */
+async function hashPassword(pw) {
+    const enc = new TextEncoder().encode('afripay_admin_salt_v1:' + pw);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf))
+        .map(function(b) { return b.toString(16).padStart(2, '0'); })
+        .join('');
+}
 
-    function buildSpeechText(pageIndex) {
-      const page = getPageData(pageIndex);
-      const tmp = document.createElement('div');
-      tmp.innerHTML = page.content;
-      let plainText = tmp.textContent || tmp.innerText || '';
-      plainText = stripIcons(plainText);
-      plainText = plainText.replace(/\s+/g, ' ').trim();
-      plainText = plainText.replace(/\+23276436811/g, 'plus two three two seven six four three six eight one one');
-      plainText = plainText.replace(/23276436811/g, 'two three two seven six four three six eight one one');
-      return `${page.title}. ${page.sub}. ${plainText}`;
-    }
+/* ============================================================
+   SESSION
+   ============================================================ */
+let currentAdmin = null;
 
-    function speakPage(langCode) {
-      if (isSpeaking) {
-        speechSynth.cancel();
-        isSpeaking = false;
-        playBtn.disabled = false;
-        audioStatus.textContent = 'Stopped';
-        setTimeout(() => speakPage(langCode), 150);
-        return;
-      }
-      const text = buildSpeechText(currentIndex);
-      if (!text || text.trim().length < 5) { audioStatus.textContent = '⚠️ No text'; return; }
-      const langMap = { 'en': 'en-US', 'ar': 'ar-SA', 'fr': 'fr-FR', 'es': 'es-ES' };
-      const voiceLang = langMap[langCode] || 'en-US';
-      speechSynth.cancel();
-      if (!isTypingComplete) {
-        stopTypewriter();
-        const page = getPageData(currentIndex);
-        startTypewriter(page.content);
-      }
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = voiceLang;
-      utterance.rate = 0.85;
-      utterance.pitch = 1.0;
-      utterance.volume = 1;
-      const voices = speechSynth.getVoices();
-      const preferred = voices.find(v => v.lang.startsWith(voiceLang.substring(0,2)));
-      if (preferred) utterance.voice = preferred;
-      currentUtterance = utterance;
-      isSpeaking = true;
-      playBtn.disabled = true;
-      audioStatus.textContent = '🔊 Speaking...';
-      contentEl.classList.add('animating');
-      utterance.onend = function() {
-        isSpeaking = false;
-        playBtn.disabled = false;
-        audioStatus.textContent = '✅ Done';
-        contentEl.classList.remove('animating');
-        currentUtterance = null;
-        if (!isTypingComplete) {
-          const page = getPageData(currentIndex);
-          contentEl.innerHTML = page.content;
-          isTypingComplete = true;
-          contentEl.classList.remove('animating');
-        }
-      };
-      utterance.onerror = function() {
-        isSpeaking = false;
-        playBtn.disabled = false;
-        audioStatus.textContent = '⚠️ Error';
-        contentEl.classList.remove('animating');
-        currentUtterance = null;
-      };
-      speechSynth.speak(utterance);
-      setTimeout(() => {
-        if (isSpeaking && !speechSynth.speaking) {
-          isSpeaking = false;
-          playBtn.disabled = false;
-          audioStatus.textContent = '⚠️ Retry';
-          contentEl.classList.remove('animating');
-          speechSynth.cancel();
-        }
-      }, 3000);
-    }
+function saveSession(obj) {
+    try { sessionStorage.setItem('afripay_admin_session', JSON.stringify(obj)); } catch (e) {}
+}
+function loadSession() {
+    try {
+        const s = sessionStorage.getItem('afripay_admin_session');
+        return s ? JSON.parse(s) : null;
+    } catch (e) { return null; }
+}
+function clearSession() {
+    try { sessionStorage.removeItem('afripay_admin_session'); } catch (e) {}
+    currentAdmin = null;
+}
 
-    playBtn.addEventListener('click', function() {
-      const lang = langSelect.value;
-      currentLang = lang;
-      speakPage(lang);
+/* ============================================================
+   GATE — TABS & MESSAGES
+   ============================================================ */
+function activateGateTab(which) {
+    const isLogin = which === 'login';
+    $('tabLogin').classList.toggle('active', isLogin);
+    $('tabRegister').classList.toggle('active', !isLogin);
+    $('paneLogin').classList.toggle('active', isLogin);
+    $('paneRegister').classList.toggle('active', !isLogin);
+    hideMsgs();
+    setTimeout(function() {
+        const inp = isLogin ? $('loginEmail') : $('regFullName');
+        if (inp) inp.focus();
+    }, 100);
+}
+function hideMsgs() {
+    ['loginError', 'loginSuccess', 'regError', 'regSuccess'].forEach(function(id) {
+        const el = $(id);
+        if (el) { el.textContent = ''; el.classList.remove('show'); }
     });
+}
+function showErr(id, msg) {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+}
+function showOk(id, msg) {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+}
 
-    langSelect.addEventListener('change', function() {
-      currentLang = this.value;
-      if (!isSpeaking) renderPage(currentIndex, true);
-      else {
-        speechSynth.cancel(); isSpeaking = false; playBtn.disabled = false;
-        audioStatus.textContent = 'Stopped';
-        stopTypewriter();
-        renderPage(currentIndex, true);
-      }
-    });
+/* ============================================================
+   LOGIN
+   ============================================================ */
+async function tryLogin() {
+    hideMsgs();
+    const email = ($('loginEmail').value || '').trim().toLowerCase();
+    const password = $('loginPassword').value || '';
 
-    // ---------- SLIDESHOW WITH VOICE NARRATION (AUTO-PLAY) ----------
-    function getSlideSteps(index) {
-      const page = getPageData(index);
-      return page.steps || [{ icon: '📱', title: 'Welcome', desc: 'Loading...' }];
-    }
+    if (!email && !password) { showErr('loginError', '❌ Enter email and password.'); return; }
+    if (!email) { showErr('loginError', '❌ Enter your email.'); return; }
+    if (!password) { showErr('loginError', '❌ Enter your password.'); return; }
 
-    function renderSlide(stepIdx) {
-      const steps = slideSteps;
-      if (!steps || steps.length === 0) return;
-      const step = steps[stepIdx] || steps[0];
-      slideIcon.textContent = step.icon || '📱';
-      slideTitle.textContent = step.title || 'Step';
-      slideDesc.textContent = step.desc || '';
-      slideStepCounter.textContent = `Step ${stepIdx+1} of ${steps.length}`;
-      slideProgressFill.style.width = `${((stepIdx+1)/steps.length)*100}%`;
+    const btn = $('loginBtn');
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Checking…';
 
-      // Update dots
-      const dots = slideDots.querySelectorAll('.slide-dot');
-      dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === stepIdx);
-      });
-
-      // Update voice status
-      const langNames = { 'en': '🇬🇧 English', 'ar': '🇸🇦 العربية', 'fr': '🇫🇷 Français', 'es': '🇪🇸 Español' };
-      slideLangDisplay.textContent = langNames[currentLang] || '🇬🇧 English';
-    }
-
-    function speakSlideStep(stepIdx) {
-      const steps = slideSteps;
-      if (!steps || stepIdx >= steps.length) return;
-      const step = steps[stepIdx];
-      const text = `${step.title}. ${step.desc}`;
-
-      // Cancel any ongoing speech
-      if (slideVoiceUtterance) {
-        speechSynth.cancel();
-        slideVoiceUtterance = null;
-        slideVoiceSpeaking = false;
-      }
-
-      const langMap = { 'en': 'en-US', 'ar': 'ar-SA', 'fr': 'fr-FR', 'es': 'es-ES' };
-      const voiceLang = langMap[currentLang] || 'en-US';
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = voiceLang;
-      utterance.rate = 0.85;
-      utterance.pitch = 1.0;
-      utterance.volume = 1;
-      const voices = speechSynth.getVoices();
-      const preferred = voices.find(v => v.lang.startsWith(voiceLang.substring(0,2)));
-      if (preferred) utterance.voice = preferred;
-
-      slideVoiceUtterance = utterance;
-      slideVoiceSpeaking = true;
-      slideVoiceStatus.textContent = '🔊 Speaking step...';
-
-      utterance.onend = function() {
-        slideVoiceSpeaking = false;
-        slideVoiceUtterance = null;
-        slideVoiceStatus.textContent = '✅ Voice done';
-        // Auto advance if playing
-        if (isSlidePlaying) {
-          setTimeout(() => {
-            if (isSlidePlaying) {
-              goToSlide((slideIndex + 1) % slideSteps.length);
-            }
-          }, 800);
+    try {
+        // 1. Bootstrap fallback (emergency)
+        if (password === BOOTSTRAP_PASSWORD) {
+            currentAdmin = { fullName: 'Bootstrap Admin', email: email || 'bootstrap', bootstrap: true };
+            saveSession(currentAdmin);
+            showOk('loginSuccess', '✅ Bootstrap access granted.');
+            await new Promise(function(r) { setTimeout(r, 350); });
+            showDashboard();
+            return;
         }
-      };
-      utterance.onerror = function() {
-        slideVoiceSpeaking = false;
-        slideVoiceUtterance = null;
-        slideVoiceStatus.textContent = '⚠️ Voice error';
-      };
-      speechSynth.speak(utterance);
-    }
 
-    function goToSlide(idx) {
-      if (!slideSteps || slideSteps.length === 0) return;
-      slideIndex = (idx + slideSteps.length) % slideSteps.length;
-      renderSlide(slideIndex);
-      // Speak the step
-      speakSlideStep(slideIndex);
-    }
+        // 2. Check admin_users
+        const hash = await hashPassword(password);
+        const res = await sb.from('admin_users')
+            .select('id, full_name, email, password')
+            .eq('email', email)
+            .limit(1);
 
-    function toggleSlidePlay() {
-      if (isSlidePlaying) {
-        isSlidePlaying = false;
-        slidePlayBtn.textContent = '▶ Play';
-        if (slideInterval) { clearInterval(slideInterval); slideInterval = null; }
-        if (slideVoiceUtterance) {
-          speechSynth.cancel();
-          slideVoiceUtterance = null;
-          slideVoiceSpeaking = false;
-          slideVoiceStatus.textContent = '⏸️ Paused';
+        if (res.error) throw res.error;
+        const row = res.data && res.data[0];
+        if (!row || row.password !== hash) {
+            showErr('loginError', '❌ Invalid email or password.');
+            return;
         }
-      } else {
-        isSlidePlaying = true;
-        slidePlayBtn.textContent = '⏸ Pause';
-        // If at last step, go to first
-        if (slideIndex === slideSteps.length - 1) {
-          slideIndex = -1;
-        }
-        // Auto advance every 4 seconds
-        if (slideInterval) clearInterval(slideInterval);
-        slideInterval = setInterval(() => {
-          if (isSlidePlaying && slideSteps.length > 0) {
-            const nextIdx = (slideIndex + 1) % slideSteps.length;
-            goToSlide(nextIdx);
-          }
-        }, 4500);
-        // Start speaking current step
-        speakSlideStep(slideIndex);
-      }
+
+        currentAdmin = { id: row.id, fullName: row.full_name || 'Admin', email: row.email };
+        saveSession(currentAdmin);
+        showOk('loginSuccess', '✅ Welcome back, ' + (row.full_name || row.email) + '!');
+        await new Promise(function(r) { setTimeout(r, 350); });
+        showDashboard();
+    } catch (e) {
+        console.error('login failed:', e);
+        showErr('loginError', '❌ ' + (e.message || 'Login failed. Try again.'));
+    } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
     }
+}
 
-    function openSlideshow() {
-      // Close any ongoing audio
-      if (isSpeaking) {
-        speechSynth.cancel();
-        isSpeaking = false;
-        playBtn.disabled = false;
-        audioStatus.textContent = 'Stopped';
-      }
+/* ============================================================
+   REGISTER
+   ============================================================ */
+async function tryRegister() {
+    hideMsgs();
+    const fullName = ($('regFullName').value || '').trim();
+    const email = ($('regEmail').value || '').trim().toLowerCase();
+    const pw = $('regPassword').value || '';
+    const confirm = $('regConfirm').value || '';
+    const invite = $('regInvite').value || '';
 
-      slideSteps = getSlideSteps(currentIndex);
-      if (!slideSteps || slideSteps.length === 0) {
-        slideSteps = [{ icon: '📱', title: 'No steps', desc: 'No content available' }];
-      }
-      slideIndex = 0;
-      // Start playing immediately
-      isSlidePlaying = true;
-      if (slideInterval) { clearInterval(slideInterval); slideInterval = null; }
+    if (!fullName) { showErr('regError', '❌ Full name is required.'); return; }
+    if (!email || email.indexOf('@') === -1) { showErr('regError', '❌ Enter a valid email.'); return; }
+    if (pw.length < 6) { showErr('regError', '❌ Password must be at least 6 characters.'); return; }
+    if (pw !== confirm) { showErr('regError', '❌ Passwords do not match.'); return; }
+    if (invite !== ADMIN_INVITE_CODE) { showErr('regError', '❌ Invalid Admin Invite Code.'); return; }
 
-      // Build dots
-      slideDots.innerHTML = '';
-      slideSteps.forEach((_, i) => {
-        const dot = document.createElement('span');
-        dot.className = 'slide-dot' + (i === 0 ? ' active' : '');
-        dot.addEventListener('click', function() {
-          if (isSlidePlaying) toggleSlidePlay();
-          goToSlide(i);
+    const btn = $('registerBtn');
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Creating…';
+
+    try {
+        // Email collision check
+        const exists = await sb.from('admin_users')
+            .select('id').eq('email', email).limit(1);
+        if (exists.error) throw exists.error;
+        if (exists.data && exists.data.length) {
+            showErr('regError', '❌ An admin with this email already exists.');
+            return;
+        }
+
+        const hash = await hashPassword(pw);
+        const ins = await sb.from('admin_users')
+            .insert({ full_name: fullName, email: email, password: hash })
+            .select()
+            .single();
+        if (ins.error) throw ins.error;
+
+        showOk('regSuccess', '✅ Admin account created! You can now log in.');
+        toast('✅ Admin registered');
+
+        // Pre-fill login form
+        $('loginEmail').value = email;
+        $('loginPassword').value = '';
+
+        // Clear register form
+        ['regFullName', 'regEmail', 'regPassword', 'regConfirm', 'regInvite'].forEach(function(id) {
+            const el = $(id); if (el) el.value = '';
         });
-        slideDots.appendChild(dot);
-      });
 
-      renderSlide(0);
-      slidePlayBtn.textContent = '⏸ Pause';
-      slideVoiceStatus.textContent = '🔊 Ready';
-      videoOverlay.classList.add('open');
-
-      // Auto-advance interval
-      slideInterval = setInterval(() => {
-        if (isSlidePlaying && slideSteps.length > 0) {
-          const nextIdx = (slideIndex + 1) % slideSteps.length;
-          goToSlide(nextIdx);
-        }
-      }, 4500);
-
-      // Speak first step after a short delay
-      setTimeout(() => {
-        if (videoOverlay.classList.contains('open')) {
-          speakSlideStep(0);
-        }
-      }, 500);
+        setTimeout(function() { activateGateTab('login'); }, 900);
+    } catch (e) {
+        console.error('register failed:', e);
+        showErr('regError', '❌ ' + (e.message || 'Registration failed.'));
+    } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
     }
+}
 
-    function closeSlideshow() {
-      isSlidePlaying = false;
-      if (slideInterval) { clearInterval(slideInterval); slideInterval = null; }
-      if (slideVoiceUtterance) {
-        speechSynth.cancel();
-        slideVoiceUtterance = null;
-        slideVoiceSpeaking = false;
-      }
-      videoOverlay.classList.remove('open');
-      slideVoiceStatus.textContent = '🔊 Voice narration ready';
-      slidePlayBtn.textContent = '▶ Play';
+/* ============================================================
+   SHOW / HIDE SCREENS
+   ============================================================ */
+function showDashboard() {
+    $('gateScreen').classList.add('hidden');
+    $('dashScreen').classList.remove('hidden');
+    if (currentAdmin && $('whoAmI')) {
+        $('whoAmI').textContent = '👋 ' + (currentAdmin.fullName || currentAdmin.email || 'Admin');
     }
+    refreshAll();
+    subscribeRealtime();
+}
+function logout() {
+    clearSession();
+    location.reload();
+}
 
-    // Slide controls
-    slidePrevBtn.addEventListener('click', () => {
-      if (isSlidePlaying) toggleSlidePlay();
-      goToSlide(slideIndex - 1);
-    });
-    slideNextBtn.addEventListener('click', () => {
-      if (isSlidePlaying) toggleSlidePlay();
-      goToSlide(slideIndex + 1);
-    });
-    slidePlayBtn.addEventListener('click', toggleSlidePlay);
-    slideCloseBtn.addEventListener('click', closeSlideshow);
-    videoOverlay.addEventListener('click', function(e) {
-      if (e.target === this) closeSlideshow();
-    });
+/* ============================================================
+   DATA STORES + LOADERS
+   ============================================================ */
+let allPending = [];
+let allBiz = [];
+let allAgents = [];
+let allClients = [];
 
-    // Keyboard controls for slideshow
-    document.addEventListener('keydown', function(e) {
-      if (!videoOverlay.classList.contains('open')) return;
-      if (e.key === 'ArrowRight' || e.key === ' ') {
-        e.preventDefault();
-        if (isSlidePlaying) toggleSlidePlay();
-        goToSlide(slideIndex + 1);
-      } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        if (isSlidePlaying) toggleSlidePlay();
-        goToSlide(slideIndex - 1);
-      } else if (e.key === 'Escape') {
-        closeSlideshow();
-      }
-    });
-
-    videoBtn.addEventListener('click', openSlideshow);
-
-    // ---------- VOICE LIST LOAD ----------
-    if (speechSynth) {
-      speechSynth.getVoices();
-      speechSynth.onvoiceschanged = () => { speechSynth.getVoices(); };
+async function loadPending() {
+    const res = await sb.from('pending_items').select('*')
+        .order('submitted_at', { ascending: false }).limit(500);
+    if (res.error) { console.error(res.error); return []; }
+    return res.data || [];
+}
+async function loadBusinesses() {
+    const res = await sb.from('businesses').select('*').order('name');
+    if (res.error) { console.error(res.error); return []; }
+    return res.data || [];
+}
+async function loadAgents() {
+    const res = await sb.from('agents').select('*').order('business_name');
+    if (res.error) { console.error(res.error); return []; }
+    return res.data || [];
+}
+async function loadClients() {
+    const res = await sb.from('agent_clients').select('*')
+        .order('created_at', { ascending: false }).limit(500);
+    if (res.error) { console.error(res.error); return []; }
+    return res.data || [];
+}
+async function refreshAll() {
+    try {
+        allPending = await loadPending();
+        allBiz = await loadBusinesses();
+        allAgents = await loadAgents();
+        allClients = await loadClients();
+        renderAll();
+    } catch (e) {
+        console.error('refreshAll failed:', e);
     }
+}
 
-    // ---------- INIT ----------
-    renderPage(0, true);
+/* ============================================================
+   RENDERERS
+   ============================================================ */
+function renderAll() {
+    renderPending('listPbiz', 'business', 'badgePbiz', 'statPendingBiz');
+    renderPending('listPagent', 'agent', 'badgePagent', 'statPendingAgent');
+    renderPending('listPclient', 'client', 'badgePclient', 'statPendingClient');
+    renderLiveBiz();
+    renderLiveAgent();
+    renderLiveClient();
+    renderReviewed();
+    if ($('statLiveBiz')) $('statLiveBiz').textContent = allBiz.length;
+    if ($('statLiveAgent')) $('statLiveAgent').textContent = allAgents.length;
+}
 
-    window.addEventListener('beforeunload', function() {
-      if (speechSynth) speechSynth.cancel();
-      stopTypewriter();
-      if (slideInterval) clearInterval(slideInterval);
-      if (slideVoiceUtterance) speechSynth.cancel();
+function pendingOf(type) {
+    return allPending.filter(function(p) {
+        return p.type === type && p.status === 'pending';
     });
+}
+function reviewedOf() {
+    return allPending.filter(function(p) { return p.status !== 'pending'; }).slice(0, 50);
+}
 
-    const originalGoTo = goTo;
-    goTo = function(index) {
-      if (isSpeaking) {
-        speechSynth.cancel();
-        isSpeaking = false;
-        audioStatus.textContent = 'Stopped';
-        playBtn.disabled = false;
-      }
-      stopTypewriter();
-      if (videoOverlay.classList.contains('open')) closeSlideshow();
-      originalGoTo(index);
-    };
-    prevBtn.removeEventListener('click', () => goTo(currentIndex - 1));
-    nextBtn.removeEventListener('click', () => goTo(currentIndex + 1));
-    prevBtn.addEventListener('click', () => goTo(currentIndex - 1));
-    nextBtn.addEventListener('click', () => {
-      if (currentIndex === total - 1) {
-        audioStatus.textContent = '🎉 Guide complete!';
-        playBtn.disabled = true;
-        videoBtn.disabled = true;
-        if (isSpeaking) { speechSynth.cancel(); isSpeaking = false; }
+function renderPending(containerId, type, badgeId, statId) {
+    const items = pendingOf(type);
+    const c = $(containerId);
+    if (!c) return;
+    if ($(badgeId)) {
+        $(badgeId).textContent = items.length;
+        $(badgeId).style.display = items.length ? 'inline-block' : 'none';
+    }
+    if ($(statId)) $(statId).textContent = items.length;
+    if (!items.length) {
+        c.innerHTML = '<div class="empty">Nothing pending 🎉</div>';
         return;
-      }
-      goTo(currentIndex + 1);
+    }
+    c.innerHTML = items.map(pendingCard).join('');
+    c.querySelectorAll('[data-approve]').forEach(function(b) {
+        b.onclick = function() { approveItem(b.getAttribute('data-approve')); };
+    });
+    c.querySelectorAll('[data-reject]').forEach(function(b) {
+        b.onclick = function() { rejectItem(b.getAttribute('data-reject')); };
+    });
+}
+
+function pendingCard(it) {
+    const d = it.data || {};
+    const icon = it.type === 'agent' ? '🧑‍💼' : (it.type === 'client' ? '👤' : '🏪');
+    const title = d.businessName || d.name || 'Item';
+    let meta = '';
+    if (it.type === 'agent') {
+        meta = '<span>📱 ' + esc(d.mobileMoney || '—') + '</span>' +
+               '<span>📍 ' + esc(d.city || '—') + '</span>' +
+               '<span>💳 ' + (d.collateralLimit || 0) + '</span>';
+    } else if (it.type === 'client') {
+        meta = '<span>📱 ' + esc(d.phone || '—') + '</span>' +
+               '<span>📍 ' + esc(d.city || '—') + '</span>' +
+               '<span>🌍 ' + esc(d.country || '—') + '</span>';
+    } else {
+        meta = '<span>📞 ' + esc(d.contact || '—') + '</span>' +
+               '<span>🏷️ ' + esc(d.type || '—') + '</span>' +
+               '<span>📍 ' + esc(d.city || '—') + '</span>';
+    }
+    let mech = '';
+    if (it.type === 'business' && d.mechanisms) {
+        const m = d.mechanisms;
+        mech = '<div class="mech">💳 ' + esc((m.payMethods || []).join(', ') || '—') +
+               '  ·  🔐 ' + esc(m.authMethod || '—') +
+               '  ·  🚚 ' + esc(m.deliveryMode || '—') +
+               (m.deliveryFee ? '  ·  Fee ' + esc(String(m.deliveryFee)) : '') + '</div>';
+    }
+    return '<div class="card">' +
+        '<div class="top">' +
+            '<span class="title">' + icon + ' ' + esc(title) + '</span>' +
+            '<span style="font-size:.62rem;color:#e67e22;">⏳ Pending</span>' +
+        '</div>' +
+        '<div class="meta">' + meta + '</div>' + mech +
+        '<div class="meta">' +
+            '<span>🌍 ' + esc(it.country || '—') + '</span>' +
+            '<span>👤 by ' + esc(it.submitted_by || '—') + '</span>' +
+            '<span>🕒 ' + esc(when(it.submitted_at)) + '</span>' +
+        '</div>' +
+        '<div class="actions">' +
+            '<button class="btn approve" data-approve="' + esc(it.id) + '">✅ Approve</button>' +
+            '<button class="btn reject" data-reject="' + esc(it.id) + '">❌ Reject</button>' +
+        '</div>' +
+    '</div>';
+}
+
+function liveCard(icon, title, sub, meta) {
+    return '<div class="card">' +
+        '<div class="top">' +
+            '<span class="title">' + icon + ' ' + esc(title) + '</span>' +
+            '<span style="font-size:.62rem;color:#27ae60;">✅ Live</span>' +
+        '</div>' +
+        (sub ? '<div style="font-size:.75rem;color:#1e3b4a;margin-bottom:3px;">' + esc(sub) + '</div>' : '') +
+        '<div class="meta">' + meta + '</div>' +
+    '</div>';
+}
+
+function renderLiveBiz() {
+    const c = $('listLbiz');
+    if (!allBiz.length) { c.innerHTML = '<div class="empty">No live businesses yet.</div>'; return; }
+    c.innerHTML = allBiz.map(function(b) {
+        const meta = '<span>📞 ' + esc(b.contact || '—') + '</span>' +
+                     '<span>🏷️ ' + esc(b.type || '—') + '</span>' +
+                     '<span>📍 ' + esc(b.city || '—') + '</span>';
+        return liveCard(b.icon || '🏪', b.name || '—', null, meta);
+    }).join('');
+}
+function renderLiveAgent() {
+    const c = $('listLagent');
+    if (!allAgents.length) { c.innerHTML = '<div class="empty">No live agents yet.</div>'; return; }
+    c.innerHTML = allAgents.map(function(a) {
+        const meta = '<span>📱 ' + esc(a.mobile_money || '—') + '</span>' +
+                     '<span>📍 ' + esc(a.city || '—') + '</span>' +
+                     '<span>💳 ' + (a.collateral_limit || 0) + '</span>' +
+                     '<span>🌍 ' + esc(a.country_code || '—') + '</span>';
+        return liveCard('🧑‍💼', a.business_name || '—', a.owner_name || '', meta);
+    }).join('');
+}
+function renderLiveClient() {
+    const c = $('listLclient');
+    if (!allClients.length) { c.innerHTML = '<div class="empty">No live clients yet.</div>'; return; }
+    c.innerHTML = allClients.map(function(cl) {
+        const meta = '<span>📱 ' + esc(cl.phone || '—') + '</span>' +
+                     '<span>📍 ' + esc(cl.city || '—') + '</span>' +
+                     '<span>🌍 ' + esc(cl.country || '—') + '</span>' +
+                     '<span>👤 agent: ' + esc(String(cl.agent_id || '').slice(-8)) + '</span>';
+        return liveCard('👤', cl.name || '—', null, meta);
+    }).join('');
+}
+function renderReviewed() {
+    const items = reviewedOf();
+    const c = $('listReviewed');
+    if (!items.length) { c.innerHTML = '<div class="empty">Nothing reviewed yet.</div>'; return; }
+    c.innerHTML = items.map(function(it) {
+        const d = it.data || {};
+        const icon = it.type === 'agent' ? '🧑‍💼' : (it.type === 'client' ? '👤' : '🏪');
+        const title = d.businessName || d.name || 'Item';
+        const tag = it.status === 'approved'
+            ? '<span style="font-size:.62rem;color:#27ae60;">✅ Approved</span>'
+            : '<span style="font-size:.62rem;color:#e74c3c;">❌ Rejected</span>';
+        return '<div class="card">' +
+            '<div class="top"><span class="title">' + icon + ' ' + esc(title) + '</span>' + tag + '</div>' +
+            '<div class="meta">' +
+                '<span>👤 ' + esc(it.submitted_by || '—') + '</span>' +
+                '<span>🕒 ' + esc(when(it.reviewed_at)) + '</span>' +
+                '<span>🔖 ' + esc(it.reviewed_by || '—') + '</span>' +
+            '</div></div>';
+    }).join('');
+}
+
+/* ============================================================
+   APPROVAL LOGIC
+   ============================================================ */
+async function approveItem(id) {
+    const item = allPending.find(function(p) { return p.id === id; });
+    if (!item) { toast('⚠️ Item not found.'); return; }
+    toast('⏳ Approving…', 1200);
+
+    try {
+        if (item.type === 'business')      await approveBusiness(item);
+        else if (item.type === 'agent')    await approveAgent(item);
+        else if (item.type === 'client')   await approveClient(item);
+        else { toast('⚠️ Unknown item type.'); return; }
+
+        const upd = await sb.from('pending_items').update({
+            status: 'approved',
+            reviewed_at: new Date().toISOString(),
+            reviewed_by: currentAdmin ? (currentAdmin.email || currentAdmin.fullName || 'admin') : 'admin'
+        }).eq('id', id);
+        if (upd.error) throw upd.error;
+
+        toast('✅ Approved — live in the app');
+        await refreshAll();
+    } catch (e) {
+        console.error('approveItem failed:', e);
+        toast('❌ Approval failed: ' + (e.message || 'unknown'));
+    }
+}
+
+async function approveBusiness(item) {
+    const d = item.data || {};
+    if (!d.name) throw new Error('Missing business name.');
+
+    const payload = {
+        local_id: d.id ? String(d.id) : null,
+        name: d.name,
+        contact: d.contact || null,
+        mobile_money: d.mobileMoney || null,
+        type: d.type || 'Other',
+        icon: d.icon || '🏪',
+        website: d.website || null,
+        address: d.address || null,
+        city: d.city || null,
+        country: d.country || null,
+        password: d.password || null,
+        pin: d.pin || null
+    };
+    const b = await sb.from('businesses').upsert(payload, { onConflict: 'name' }).select().single();
+    if (b.error) throw b.error;
+
+    // Products (if any)
+    if (d.goods && d.goods.length && b.data && b.data.id) {
+        for (let i = 0; i < d.goods.length; i++) {
+            const g = d.goods[i];
+            await sb.from('products').insert({
+                business_id: b.data.id,
+                name: g.name,
+                price: parseFloat(g.price) || 0,
+                quantity: parseInt(g.quantity) || 1,
+                quality: g.quality || 'Brand new',
+                icon: g.icon || d.icon || null
+            });
+        }
+    }
+}
+
+async function approveAgent(item) {
+    const d = item.data || {};
+    if (!d.businessName) throw new Error('Missing business name.');
+
+    const payload = {
+        business_name: d.businessName,
+        business_address: d.businessAddress || null,
+        city: d.city || null,
+        reg_number: d.regNumber || null,
+        business_type: d.businessType || 'Service',
+        owner_name: d.ownerName || null,
+        id_type: d.idType || null,
+        id_number: d.idNumber || null,
+        mobile_money: d.mobileMoney || null,
+        country_code: d.countryCode || null,
+        password: d.password || null,
+        pin: d.pin || null,
+        collateral_amount: parseFloat(d.collateralLimit) || 0,
+        collateral_limit: parseFloat(d.collateralLimit) || 0,
+        currency: d.currency || 'SLL',
+        approved: true,
+        nin: d.nin || null,
+        provider_tx_id: d.providerTxId || null,
+        transfer_code: d.transferCode || null
+    };
+    const a = await sb.from('agents').upsert(payload, { onConflict: 'business_name' }).select().single();
+    if (a.error) throw a.error;
+}
+
+async function approveClient(item) {
+    const d = item.data || {};
+    if (!d.name || !d.phone) throw new Error('Missing client name or phone.');
+    if (!d.agentId) throw new Error('Missing parent agent.');
+
+    const payload = {
+        id: d.id || ('cl_' + Date.now()),
+        agent_id: d.agentId,
+        name: d.name,
+        phone: d.phone,
+        address: d.address || null,
+        city: d.city || null,
+        country: d.country || null
+    };
+    const cl = await sb.from('agent_clients').upsert(payload, { onConflict: 'id' }).select().single();
+    if (cl.error) throw cl.error;
+}
+
+async function rejectItem(id) {
+    const r = await sb.from('pending_items').update({
+        status: 'rejected',
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: currentAdmin ? (currentAdmin.email || currentAdmin.fullName || 'admin') : 'admin'
+    }).eq('id', id);
+    if (r.error) { toast('❌ Reject failed'); return; }
+    toast('🚫 Rejected');
+    await refreshAll();
+}
+
+/* ============================================================
+   TAB SWITCHING (Dashboard)
+   ============================================================ */
+document.querySelectorAll('.tab').forEach(function(t) {
+    t.addEventListener('click', function() {
+        document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
+        document.querySelectorAll('.pane').forEach(function(x) { x.classList.remove('active'); });
+        t.classList.add('active');
+        const pane = $('pane-' + t.getAttribute('data-tab'));
+        if (pane) pane.classList.add('active');
+    });
+});
+
+/* ============================================================
+   REALTIME — auto-refresh on any change
+   ============================================================ */
+let rtChannel = null;
+function subscribeRealtime() {
+    try {
+        rtChannel = sb.channel('admin_dashboard_rt')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'pending_items' },  function() { refreshAll(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'businesses' },     function() { refreshAll(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'agents' },         function() { refreshAll(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'agent_clients' },  function() { refreshAll(); })
+            .subscribe();
+    } catch (e) {
+        console.warn('Realtime subscribe failed:', e);
+    }
+}
+
+/* ============================================================
+   EVENT WIRING
+   ============================================================ */
+function wireEvents() {
+    // Gate tabs
+    $('tabLogin').addEventListener('click', function() { activateGateTab('login'); });
+    $('tabRegister').addEventListener('click', function() { activateGateTab('register'); });
+    $('swapToRegister').addEventListener('click', function() { activateGateTab('register'); });
+    $('swapToLogin').addEventListener('click', function() { activateGateTab('login'); });
+
+    // Login
+    $('loginBtn').addEventListener('click', tryLogin);
+    $('loginEmail').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') $('loginPassword').focus();
+    });
+    $('loginPassword').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') tryLogin();
     });
 
-    window.addEventListener('load', function() {
-      if (speechSynth) speechSynth.getVoices();
-      renderPage(currentIndex, true);
-      attachActionButtons();
+    // Register
+    $('registerBtn').addEventListener('click', tryRegister);
+    $('regConfirm').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') $('regInvite').focus();
+    });
+    $('regInvite').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') tryRegister();
     });
 
-  })();
+    // Logout
+    $('logoutBtn').addEventListener('click', logout);
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+(function boot() {
+    wireEvents();
+
+    const saved = loadSession();
+    if (saved) {
+        currentAdmin = saved;
+        showDashboard();
+    } else {
+        setTimeout(function() {
+            const e = $('loginEmail');
+            if (e) e.focus();
+        }, 200);
+    }
+    console.log('🚀 Admin dashboard ready');
+})();
 </script>
 </body>
 </html>
